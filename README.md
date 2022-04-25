@@ -5,7 +5,7 @@ python script for quant( provide comprehensive index and backtesting structure)
 # -------INSTALL--------------
 Manual:     
 
-              git clone https://github.com/LHanLi/yaya_metal.git
+              git clone https://github.com/LHanLi/yaya_quant.git
               
               cd yaya_quant
               
@@ -13,5 +13,5 @@ Manual:
               
 Automatic:
 
-            pip3 install --upgrade --user   git+https://github.com/LHanLi/yaya_metal.git
+            pip3 install --upgrade --user   git+https://github.com/LHanLi/yaya_quant.git
 
