@@ -271,7 +271,7 @@ def plot_diff_table(diff_list):
 
 
 
-def plot_diff_cef_table(diff_list):
+def plot_diff_cfe_table(diff_list):
     from bokeh.models import ColumnDataSource, HoverTool
     from bokeh.plotting import figure, output_file, show
     from bokeh.io import output_notebook
@@ -326,8 +326,9 @@ def plot_diff_cef_table(diff_list):
         # attr of A and B
         compareA = attr + '_x'
         compareB = attr + '_y'
-        # 差值
-        plot_df['diff'] = multi_A * plot_df[compareA] - multi_B * plot_df[compareB]
+        
+        # 差值 and normalize
+        plot_df['diff'] = (multi_A * plot_df[compareA] - multi_B * plot_df[compareB])/plot_df[compareA][-1]
 
         # sort by date
         plot_df.sort_values('date')
