@@ -23,7 +23,7 @@ from backtrader_plotting.schemes import Tradimo
 # single
 
 # BT single security 
-def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name):
+def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test'):
     import csv
     data = bt.feeds.PandasData(dataname=df_price,
                             fromdate = start,
@@ -87,7 +87,7 @@ def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datet
 
     # log result to huice_log.csv
     f = open("huice_log.txt", "a+")
-    f.write("%s     %.3f     %s \n"%(huice_name,cerebro.broker.getvalue(),strat.analyzers._SharpeRatio.get_analysis()['sharperatio']))
+    f.write("%s    %.3f    %s \n"%(huice_name,cerebro.broker.getvalue(),strat.analyzers._SharpeRatio.get_analysis()['sharperatio']))
     f.close()
     # Plot the result
     # py3.10 https://blog.csdn.net/m0_65167078/article/details/121942610
