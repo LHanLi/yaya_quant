@@ -328,8 +328,8 @@ def plot_diff_cfe_table(diff_list):
         compareB = attr + '_y'
         
         # 差值 and normalize
-        plot_df['diff'] = (multi_A * plot_df[compareA] - multi_B * plot_df[compareB])/plot_df[compareA].iloc[-1] * 10000
-
+        plot_df['diff'] = (multi_A * plot_df[compareA] - multi_B * plot_df[compareB])/plot_df[compareA]*plot_df[compareA].iloc[-1]
+        
         # sort by date
         plot_df.sort_values('date')
         #    plot_df['year'] = plot_df['date'].apply(lambda x: x.year)
