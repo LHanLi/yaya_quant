@@ -24,8 +24,8 @@ heyue_total = df_heyue[df_heyue.code.apply(lambda x: secu_A == ''.join([i for i 
 
 # 显示每年的每一时间对应主力合约 真实主连
 def show_main(heyue_total):
-    max_oi = heyue_I[['date','open_interest']].groupby(by = 'date', as_index = False).max()
-    I_main = pd.merge(max_oi,heyue_I, on = ['date','open_interest'], how = 'left')
+    max_oi = heyue_total[['date','open_interest']].groupby(by = 'date', as_index = False).max()
+    I_main = pd.merge(max_oi,heyue_total, on = ['date','open_interest'], how = 'left')
     
     year_list = list(set([str(i.date())[:4] for i in I_main.date]))
     year_list.sort()
