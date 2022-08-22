@@ -68,7 +68,7 @@ def get_main_heyue_hold(heyue_total,main_list):
     hold = [main_list[2] if str(i).split(' ')[0][-5:] < qianyue10ri(main_list[2]) and  str(i).split(' ')[0][-5:] > qianyue10ri(main_list[1])
             else main_list[1] if str(i).split(' ')[0][-5:] < qianyue10ri(main_list[1]) and str(i).split(' ')[0][-5:] > qianyue10ri(main_list[0])
             else main_list[0]
-           for i in heyue_I.date]
+           for i in heyue_total.date]
 
     #  heyue_hold is finially trade secu
     code_yuefen = [i.split('.')[0][-2:] for i in heyue_total.code]
