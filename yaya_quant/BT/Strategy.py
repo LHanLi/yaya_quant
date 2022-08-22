@@ -18,12 +18,12 @@ from backtrader_plotting.schemes import Tradimo
 # MA  短周期向上穿过长周期买入，向下卖出。 反之做空
 class MA0Strategy(bt.Strategy):
     params = (
-        ('short_period', 5),
-        ('long_period',60),
-        ('huice',0.1),
+        ('short_period', 1),
+        ('long_period',20),
+        ('huice',0.04),
         ('atr_period',10)
     )
- 
+
     def log(self, txt, dt=None):
         ''' Logging function fot this strategy'''
         dt = dt or self.datas[0].datetime.date(0)
@@ -37,19 +37,28 @@ class MA0Strategy(bt.Strategy):
         self.order = None
         self.buyprice = None
         self.buycomm = None
+        self.trade_times = 0
 
         # big eneough initial value
         self.sma_short = bt.indicators.SimpleMovingAverage(self.dataclose, period=self.params.short_period)
         self.sma_long = bt.indicators.SimpleMovingAverage(self.dataclose, period=self.params.long_period)
         
-#        self.huice = zhenfu_ind(back_period = self.params.long_period)
+        self.huice = zhenfu_ind(back_period = self.params.long_period)
         
     def start(self):
         print("the world call me!")
- 
+        self.mystats = open("log_huice_broker.txt", "w")
+        self.mystats.write('datetime value hold\n')
+
     def prenext(self):
         print("not mature")
- 
+
+    def _cancel(self,oref):
+        order = self.order[oref]
+        order.cancel(self)
+        order.cancel()
+        self.notify_order(order)
+        
     def notify_order(self, order):
         if order.status in [order.Submitted, order.Accepted]:
             # Buy/Sell order submitted/accepted to/by broker - Nothing to do
@@ -74,12 +83,13 @@ class MA0Strategy(bt.Strategy):
                           order.executed.comm))
  
             self.bar_executed = len(self)
- 
+            self.trade_times += 1
+
         elif order.status in [order.Canceled, order.Margin, order.Rejected]:
             self.log('Order Canceled/Margin/Rejected')
- 
+
         self.order = None
- 
+
     def notify_trade(self, trade):
         if not trade.isclosed:
             return
@@ -97,27 +107,38 @@ class MA0Strategy(bt.Strategy):
         
         pos = self.getposition()
         
+        if(pos == 0):
+            [self.cancel(o) for o in self.broker.orders if o.status < 4] # 取消所有未成订单 否则跟踪止损单会在之后成交
+        
+        if(self.sma_short < self.sma_long and self.sma_short[-1]>self.sma_long[-1]):
+            self.order = self.close()                                #先平仓
+            [self.cancel(o) for o in self.broker.orders if o.status < 4] # 取消所有未成订单 否则跟踪止损单会在之后成交
+#            short_amount = self.broker.getvalue()/self.dataclose[0] * 0.9
+#            self.order = self.sell(self.datas[0], size=short_amount, name=self.datas[0]._name)
+#            self.log('SELL CREATE,cur hold:%.2f,cur value:%.2f, sell amount: %.2f'%(pos.size, self.broker.getvalue(),short_amount))
+#            self.order = self.buy(size=short_amount,exectype=bt.Order.StopTrail, trailpercent=self.params.huice)
+
+        
 #        if(not pos):
             # shuangxiangduokong
         if(self.sma_short > self.sma_long and self.sma_short[-1]<self.sma_long[-1]):
         # BUY, BUY, BUY!!! (with all possible default parameters)
         # 满仓
             self.order = self.close()                                #先平仓
-            long_amount = self.broker.getvalue()/self.dataclose[0]  
+            [self.cancel(o) for o in self.broker.orders if o.status < 4] # 取消所有未成订单 否则跟踪止损单会在之后成交
+            long_amount = self.broker.getvalue()/self.dataclose[0] * 0.9
             self.order = self.buy(self.datas[0], size=long_amount, name=self.datas[0]._name)
-            self.log('BUY CREATE,cur hold: %.2f,cur value: %.2f, buy amount: %.2f' % (pos.size,self.broker.getvalue(),long_amount))
+            self.log('BUY CREATE, cur hold: %.2f,cur value: %.2f, buy amount: %.2f' % (pos.size,self.broker.getvalue(),long_amount))
 # 跟踪止损
-            self.order = self.sell(exectype=bt.Order.StopTrail, trailpercent=self.params.huice)
+            self.order = self.sell(size=long_amount,exectype=bt.Order.StopTrail, trailpercent=self.params.huice)
 
-        if(self.sma_short < self.sma_long and self.sma_short[-1]>self.sma_long[-1]):
-            self.order = self.close()                                #先平仓
-            short_amount = self.broker.getvalue()/self.dataclose[0] 
-            self.order = self.sell(self.datas[0], size=short_amount, name=self.datas[0]._name)
-            self.log('SELL CREATE,cur hold:%.2f,cur value:%.2f, sell amount: %.2f'%(pos.size, self.broker.getvalue(),short_amount))
-            self.order = self.buy(exectype=bt.Order.StopTrail, trailpercent=self.params.huice)
+# log
+        self.mystats.write('%s %.3lf %.3lf\n'%(self.datas[0].datetime.date(0),self.broker.getvalue(),pos.size))
 
 
     def stop(self):
+#        self.mystats.write('%s'%self.trade_times)
+        self.mystats.close()
         print("death")
 
         
