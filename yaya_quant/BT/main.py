@@ -55,8 +55,8 @@ def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datet
     #cerebro.addsizer(bt.sizers.FixedSize, stake=1)
 #    cerebro.addsizer(bt.sizers.AllInSizer,percents=90)
 
-    # Set the commission
-    cerebro.broker.setcommission(commission=0)
+    # Set the commission 万5
+    cerebro.broker.setcommission(commission=0.0005)
 
     # trade with that day close price!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!future function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
     cerebro.broker.set_coc(True)
@@ -132,8 +132,8 @@ def BT_muti(df_price,Strategy,start=datetime.datetime(2021, 1, 21),end=datetime.
     #cerebro.addsizer(bt.sizers.FixedSize, stake=1)
     cerebro.addsizer(bt.sizers.AllInSizer,percents=90)
 
-    # Set the commission
-    cerebro.broker.setcommission(commission=0)
+    # Set the commission 万5
+    cerebro.broker.setcommission(commission=0.0005)
 
     # trade with that day close price!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!future function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
     cerebro.broker.set_coc(True)
