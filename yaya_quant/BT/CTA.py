@@ -29,7 +29,7 @@ def show_main(heyue_total):
     
     year_list = list(set([str(i.date())[:4] for i in I_main.date]))
     year_list.sort()
-    fig,ax = plt.subplots(len(year_set),1)
+    fig,ax = plt.subplots(len(year_list),1)
     # ax index
     i = 0
     for year in year_list:
