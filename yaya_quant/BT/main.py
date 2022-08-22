@@ -93,10 +93,9 @@ def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datet
     # py3.10 https://blog.csdn.net/m0_65167078/article/details/121942610
 #    cerebro.plot(numfigs = 1,iplot=True,style='candle')
 
-    
-    b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
-    cerebro.plot(b)
-
+#    b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
+#    cerebro.plot(b)
+    return cerebro
 
 def BT_muti(df_price,Strategy,start=datetime.datetime(2021, 1, 21),end=datetime.datetime(2022,1, 21)):
     import csv
@@ -168,8 +167,9 @@ def BT_muti(df_price,Strategy,start=datetime.datetime(2021, 1, 21),end=datetime.
 #    cerebro.plot(numfigs = len(test_set),iplot=True,style='candle')
 #    cerebro.plot(style = "candlestick")
 
-    b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
-    cerebro.plot(b)
+#    b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
+#    cerebro.plot(b)
+    return cerebro
     
     
     
