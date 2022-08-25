@@ -23,7 +23,7 @@ from backtrader_plotting.schemes import Tradimo
 # single
 
 # BT single security 
-def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test'):
+def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test',comm=0.0005):
     import csv
     data = bt.feeds.PandasData(dataname=df_price,
                             fromdate = start,
@@ -55,8 +55,8 @@ def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datet
     #cerebro.addsizer(bt.sizers.FixedSize, stake=1)
 #    cerebro.addsizer(bt.sizers.AllInSizer,percents=90)
 
-    # Set the commission 万5
-    cerebro.broker.setcommission(commission=0.0005)
+    # Set the commission 万5(by default) comm
+    cerebro.broker.setcommission(commission=comm)
 
     # trade with that day close price!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!future function!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
     cerebro.broker.set_coc(True)
