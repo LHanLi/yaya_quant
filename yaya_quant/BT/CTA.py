@@ -106,7 +106,7 @@ def get_main_heyue_hold(heyue_total,main_list):
   
 # backtrader in every secu and store result in result_dict
 # heyue_I is all secu
-def backtrader_allsecu(Strategy,heyue_total,main_list):
+def backtrader_allsecu(Strategy,heyue_total,main_list,comm):
     def is_main(str_):
         if str_ == main_list[0] or str_ == main_list[1] or str_ == main_list[2]:
             return True
@@ -121,7 +121,7 @@ def backtrader_allsecu(Strategy,heyue_total,main_list):
     for secu in heyue_back:
         df_price = heyue_total[heyue_total.code == secu]
         df_price.index = df_price.date
-        main.BT(df_price,Strategy,df_price.date.iloc[0],df_price.date.iloc[-1],secu)
+        main.BT(df_price,Strategy,df_price.date.iloc[0],df_price.date.iloc[-1],secu,comm)
         df = pd.read_csv('log_huice_broker.txt',sep=r'\s+',index_col=0,parse_dates=True)
         result_dict[secu] = df
     
