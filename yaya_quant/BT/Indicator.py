@@ -1,3 +1,8 @@
+import backtrader as bt
+
+
+
+
 # ATR
 class tr_ind(bt.Indicator):
     lines = ('tr',)
