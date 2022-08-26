@@ -119,7 +119,7 @@ def backtrader_allsecu(Strategy,heyue_total,main_list,comm):
     # store result  key is secu code
     result_dict = dict()
     for secu in heyue_back:
-        print(secu)
+        print('%s'%(secu))
         df_price = heyue_total[heyue_total.code == secu]
         df_price.index = df_price.date
         main.BT(df_price,Strategy,df_price.date.iloc[0],df_price.date.iloc[-1],secu,comm)
