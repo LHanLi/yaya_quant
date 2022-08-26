@@ -59,10 +59,10 @@ def show_main(heyue_total):
 def get_main_heyue_hold(heyue_total,main_list):
     # get hold df
     def qianyue10ri(yuefen):
-    if yuefen == '01':
-        return "12-10"
-    else:
-        qianyue = float(yuefen) - 1
+        if yuefen == '01':
+            return "12-10"
+        else:
+            qianyue = float(yuefen) - 1
         return "%02d-10"%(qianyue)
     
     # hold what in specific date
