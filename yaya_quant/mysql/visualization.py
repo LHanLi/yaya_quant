@@ -15,6 +15,7 @@ def plot_diff(attr='close',multi_A=1,secu_A='RB',main_A='10',multi_B=1,secu_B='R
     df_price = df_price[df_price['date']>starttime]
     
     # 获取 secuA和secuB指定月份合约
+    # secu 字母都是2位以内的
     dataA = df_price[df_price.code.apply(lambda x: secu_A == ''.join([i for i in x[:2] if i.isalpha()]) and x.split('.')[0][-2:] == main_A)]
     # 提取code中是字母的部分，'.'前两位代表月份
     dataB = df_price[df_price.code.apply(lambda x: secu_B == ''.join([i for i in x[:2] if i.isalpha()]) and x.split('.')[0][-2:] == main_B)]
@@ -30,6 +31,7 @@ def plot_diff(attr='close',multi_A=1,secu_A='RB',main_A='10',multi_B=1,secu_B='R
     # attr of A and B
     compareA = attr + '_x'
     compareB = attr + '_y'
+    
     # 差值
     plot_df['diff'] = multi_A * plot_df[compareA] - multi_B * plot_df[compareB]
 
@@ -70,7 +72,6 @@ def plot_diff(attr='close',multi_A=1,secu_A='RB',main_A='10',multi_B=1,secu_B='R
 
     # show in notebook
 #    output_notebook()
-    # datetime zuhouyiqi
 
     # get nearest secu's start and end date
     cur_df = plot_df[plot_df.code_x == code_list[0]]
@@ -146,6 +147,7 @@ def plot_diff_table(diff_list):
     for i in range(len(diff_list)):  
         createVar['layout'+ str(i)] = 0
         layout_name.append(createVar['layout'+ str(i)])
+        
     count = 0
     
     for i in range(len(diff_list)):
