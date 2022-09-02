@@ -167,7 +167,7 @@ def reset_celue_value(result_dict,heyue_hold):
     
     net_raw_list = np.array(net_raw_list)
     hold_list = np.array(hold_list)
-    # 策略净值前复权
+    # 策略净值后复权
     # 换月手续费未考虑
     i = 0
     convert = 1
