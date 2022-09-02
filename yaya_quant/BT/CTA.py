@@ -10,10 +10,18 @@ from yaya_quant.re import eval as quant_eval
 
 '''
 # read heyue data
+#from database
 starttime = pd._libs.tslibs.timestamps.Timestamp('2014-06-13 00:00:00')
 engine = create_engine('mysql+pymysql://root:a23187@127.0.0.1/THS')
 df_heyue =  pd.read_sql_table('trading_daily_price_1',engine,columns=['date','code','open','high','low','close','volume','open_interest'])
 df_heyue = df_heyue[df_heyue.date>starttime]
+
+# from csv
+df_heyue = pd.read_csv('THS_trading_daily_price.csv',index_col=0)
+#df_heyue = pd.read_csv('IC_1min.csv',index_col=0)
+df_heyue.date = pd.to_datetime(df_heyue.date)
+
+
 
 # 提取主力合约直接连接
 secu_A = 'I'
