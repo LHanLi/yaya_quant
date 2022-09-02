@@ -41,10 +41,46 @@ heyue_total = heyue_total[heyue_total.date<endtime]
 
 
 
+CTA.show_main(heyue_total)
+
+heyue_hold,heyue_hold_reset = CTA.get_main_heyue_hold(heyue_total,main_list)
+
+# plot reset  huanyue an jiaogeyue qianyue 10ri
+fig,ax = plt.subplots(1,1)
+ax.plot(heyue_hold.close, color = 'C1', label = 'I_hold')
+ax.plot(heyue_hold_reset.close, color='C2', label='I_hold_reset')
+#ax.axes.xaxis.set_ticks([])
+ax.legend(loc = 'upper left')
+#ax2.legend(loc = 'upper right')
+ax.set_title('MA_main')
+plt.savefig('MA_main.png')
+plt.show()
+
+# get Strategy  short_period long_period stoptrail_threshold Long Short ifstop
+myStrategy = Strategy.MAStrategy(5,60,0.04,True,True,False)
+# get main and reset main
+heyue_hold,heyue_hold_reset = CTA.get_main_heyue_hold(heyue_total,main_list)
+# backtrader every secu
+result_dict = CTA.backtrader_allsecu(myStrategy,heyue_total,main_list,0.0005)
+# connect and combine
+final_result = CTA.reset_celue_value(result_dict,heyue_hold_reset)
+
+# save and show
+final_result.to_csv('MA_5_60.csv',index_label='index_label')
+final_result[['net','close']].plot()
+
+duokong =pd.read_csv('MA_5_60.csv',index_col=0, parse_dates=[0], infer_datetime_format=True)
 
 
-
-
-
-
-
+# plot fuquan close jingzhi  hold
+fig,ax = plt.subplots(1,1)
+ax.plot(duokong.close, color='C0',label='reset base',alpha=0.5)
+ax.plot(duokong.net, color='C3',label='long and short')
+ax2 = ax.twinx()
+ax2.plot(duokong.hold, color='C9', label='hold',alpha=0.1)
+ax.legend(loc = 'upper left')
+ax2.legend(loc = 'upper right')
+#ax.set_xlim(heyue_hold_reset.date[1000],heyue_hold_reset.date[-1])
+ax.set_title('MA')
+plt.savefig('MA_5_60.pdf')
+plt.show()
