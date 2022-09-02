@@ -20,7 +20,8 @@ df_heyue = df_heyue[df_heyue.date>starttime]
 df_heyue = pd.read_csv('THS_trading_daily_price.csv',index_col=0)
 #df_heyue = pd.read_csv('IC_1min.csv',index_col=0)
 df_heyue.date = pd.to_datetime(df_heyue.date)
-
+# drop row contain 0 ( all are .CZC)
+df_heyue = df_heyue.drop(index=df_heyue[df_heyue.close == 0].index)
 
 
 # 提取主力合约直接连接
