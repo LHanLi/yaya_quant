@@ -75,8 +75,8 @@ def get_main_heyue_hold(heyue_total,main_list):
         return "%02d-10"%(qianyue)
     
     # hold what in specific date
-    hold = [main_list[2] if (str(i).split(' ')[0][-5:] < qianyue10ri(main_list[2]) and  str(i).split(' ')[0][-5:] > qianyue10ri(main_list[1]))
-            else main_list[0] if (str(i).split(' ')[0][-5:] < qianyue10ri(main_list[0]) and str(i).split(' ')[0][-5:] > qianyue10ri(main_list[2]))
+    hold = [main_list[2] if (str(i).split(' ')[0][-5:] <= qianyue10ri(main_list[2]) and  str(i).split(' ')[0][-5:] > qianyue10ri(main_list[1]))
+            else main_list[0] if (str(i).split(' ')[0][-5:] <= qianyue10ri(main_list[0]) and str(i).split(' ')[0][-5:] > qianyue10ri(main_list[2]))
             else main_list[1]
            for i in heyue_total.date]
 
