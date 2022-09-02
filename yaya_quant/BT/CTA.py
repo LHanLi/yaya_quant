@@ -187,13 +187,3 @@ def reset_celue_value(result_dict,heyue_hold):
 
 
 
-'''
-# get Strategy  short_period long_period stoptrail_threshold Long Short ifstop
-myStrategy = MAStrategy(1,20,0.04,False,True,True)
-# get main and reset main
-heyue_hold,heyue_hold_reset = CTA.get_main_heyue_hold(heyue_total,main_list)
-# backtrader every secu
-result_dict = CTA.backtrader_allsecu(myStrategy,heyue_total,main_list,0.0005)
-# connect and combine
-final_result = CTA.reset_celue_value(result_dict,heyue_hold_reset)
-'''
