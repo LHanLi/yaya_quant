@@ -61,13 +61,14 @@ myStrategy = Strategy.MAStrategy(5,60,0.04,True,True,False)
 # get main and reset main
 heyue_hold,heyue_hold_reset = CTA.get_main_heyue_hold(heyue_total,main_list)
 # backtrader every secu
-result_dict = CTA.backtrader_allsecu(myStrategy,heyue_total,main_list,0.0005)
+result_dict = CTA.backtrader_allsecu(myStrategy,heyue_total,heyue_hold.code.unique(),0.0005)
 # connect and combine
 final_result = CTA.reset_celue_value(result_dict,heyue_hold_reset)
 
 # save and show
 final_result.to_csv('MA_5_60.csv',index_label='index_label')
 final_result[['net','close']].plot()
+
 
 duokong =pd.read_csv('MA_5_60.csv',index_col=0, parse_dates=[0], infer_datetime_format=True)
 
