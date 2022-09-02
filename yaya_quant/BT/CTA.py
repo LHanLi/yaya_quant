@@ -124,7 +124,7 @@ def get_main_heyue_hold(heyue_total,main_list):
   
 # backtrader in every secu and store result in result_dict
 # heyue_I is all secu
-def backtrader_allsecu(Strategy,heyue_total,main_list,comm):
+def backtrader_allsecu(Strategy,heyue_total,heyue_back,main_list,comm):
     def is_main(str_):
         if str_ == main_list[0] or str_ == main_list[1] or str_ == main_list[2]:
             return True
@@ -132,8 +132,8 @@ def backtrader_allsecu(Strategy,heyue_total,main_list,comm):
             return False
 
     # secu need to backtrade
-    heyue_back = heyue_total.code.unique()[[is_main(i.split('.')[0][-2:]) for i in heyue_total.code.unique()]]
-
+#    heyue_back = heyue_total.code.unique()[[is_main(i.split('.')[0][-2:]) for i in heyue_total.code.unique()]]
+    
     # store result  key is secu code
     result_dict = dict()
     for secu in heyue_back:
