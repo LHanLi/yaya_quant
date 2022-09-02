@@ -23,7 +23,7 @@ from backtrader_plotting.schemes import Tradimo
 # single
 
 # BT single security 
-def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test',comm=0.0005):
+def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test',comm=0.0005,plot=False):
     import csv
     data = bt.feeds.PandasData(dataname=df_price,
                             fromdate = start,
@@ -93,8 +93,9 @@ def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datet
     # py3.10 https://blog.csdn.net/m0_65167078/article/details/121942610
 #    cerebro.plot(numfigs = 1,iplot=True,style='candle')
 
-#    b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
-#    cerebro.plot(b)
+    if(plot == True):
+        b = Bokeh(style='bar', plot_mode='single',scheme=Tradimo())
+        cerebro.plot(b)
     return cerebro
 
 def BT_muti(df_price,Strategy,start=datetime.datetime(2021, 1, 21),end=datetime.datetime(2022,1, 21)):
