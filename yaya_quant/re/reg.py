@@ -31,8 +31,8 @@ def assess(reg_model, fit_corr, fit_value):
     R2 = 1-mse/np.array(fit_energy).std() 
 # plot
     m, s, _ = plt.stem(
-    np.where(reg_Lasso.coef_)[0],
-    reg_Lasso.coef_[reg_Lasso.coef_ != 0],
+    np.where(reg_model.coef_)[0],
+    reg_model.coef_[reg_model.coef_ != 0],
     markerfmt="x",
     label="coef"
     )
