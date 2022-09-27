@@ -27,7 +27,8 @@ def Lasso_reg(fit_corr, fit_value):
  
 def assess(reg_model, fit_corr, fit_value):    
 # assess
-    rmse = np.sqrt(mean_squared_error(fit_value,reg_model.predict(fit_corr)))
+    mse = mean_squared_error(fit_value,reg_model.predict(fit_corr))
+    R2 = 1-mse/np.array(fit_energy).std() 
 # plot
     m, s, _ = plt.stem(
     np.where(reg_Lasso.coef_)[0],
@@ -38,8 +39,8 @@ def assess(reg_model, fit_corr, fit_value):
     plt.setp([m, s], color="#2ca02c")
     
     plt.legend(loc="best")
-    plt.title("RMESE: %.3f " %(rmse))
+    plt.title("RMSE: %.3f $R^2$ = %.3f" %(np.sqrt(mse),R2))
 # save
     plt.savefig('coef.pdf')
-    return rmse
+    return mse,R2
   
