@@ -6,6 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LassoLarsIC
 from sklearn.pipeline import make_pipeline
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # reg
