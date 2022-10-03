@@ -24,6 +24,12 @@ def Lasso_reg(fit_corr, fit_value):
 
     return reg_Lasso
   
+    
+def OLS_reg(fit_corr,fit_value):
+    reg_OLS = linear_model.LinearRegression(fit_intercept=False)
+    reg_OLS.fit(fit_corr, fit_value)
+    return reg_OLS
+
  
 def assess(reg_model, fit_corr, fit_value):    
 # assess
