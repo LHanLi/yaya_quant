@@ -35,7 +35,7 @@ def OLS_reg(fit_corr,fit_value):
 def assess(reg_model, fit_corr, fit_value):    
 # assess
     mse = mean_squared_error(fit_value,reg_model.predict(fit_corr))
-    R2 = 1-mse/np.array(fit_energy).std()**2 
+    R2 = 1-mse/np.array(fit_value).std()**2 
 # plot
     m, s, _ = plt.stem(
     np.where(reg_model.coef_)[0],
