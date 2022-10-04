@@ -1,6 +1,5 @@
 from sklearn import linear_model
-from sklearn.datasets import make_regression
-from sklearn.metrics import mean_squared_error 
+from sklearn.datasets import make_regression 
 from sklearn.linear_model import LassoCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LassoLarsIC
@@ -35,8 +34,8 @@ def OLS_reg(fit_corr,fit_value):
  
 def assess(reg_model, fit_corr, fit_value):    
 # assess
-    mse = mean_squared_error(fit_value,reg_model.predict(fit_corr))
-    R2 = 1-mse/np.array(fit_value).std()**2 
+    rmse = (reg_model.predict(fit_corr)-fit_value).std()
+    R2 = 1-rmse**2/np.array(fit_value).std()**2 
 # plot
     m, s, _ = plt.stem(
     np.where(reg_model.coef_)[0],
@@ -47,8 +46,8 @@ def assess(reg_model, fit_corr, fit_value):
     plt.setp([m, s], color="#2ca02c")
     
     plt.legend(loc="best")
-    plt.title("RMSE: %.3f $R^2$ = %.3f" %(np.sqrt(mse),R2))
+    plt.title("RMSE: %.3f $R^2$ = %.3f" %(rmse,R2))
 # save
     plt.savefig('coef.pdf')
-    return mse,R2
+    return rmse,R2
   
