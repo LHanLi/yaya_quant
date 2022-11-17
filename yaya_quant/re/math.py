@@ -2,7 +2,7 @@ import numpy as np
 import copy
 
 
-# convert continue variable to discrete and count
+# convert continue variable to discrete and count, lena fenge fenshu
 def scatter_continue(_a,lena):
     a = copy.copy(_a)
     a.sort()
@@ -24,7 +24,7 @@ def class_continue(a,lena):
     a_max = a.max()
     a_min = a.min()
     new_a = -np.ones(len(a))
-    linspace = np.linspace(a_min,a_max,n+1)
+    linspace = np.linspace(a_min,a_max,lena+1)
     
     for i in range(len(a)):
         diff = a[i]-linspace
