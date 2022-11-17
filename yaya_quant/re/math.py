@@ -19,20 +19,20 @@ def scatter_continue(_a,lena):
             a_cut += a_d
     return a_count
 
-# label = 0, 1, 2, ...
+# label = 1, 2, ...,lena
 def class_continue(a,lena):
     a_max = a.max()
     a_min = a.min()
     new_a = -np.ones(len(a))
     linspace = np.linspace(a_min,a_max,lena+1)
+    linspace[-1] = a_max + (a_max-a_min)/(10*lena)
     
     for i in range(len(a)):
-        diff = a[i]-linspace
-        for j in range(len(diff)):
-            if diff[j] >= 0:
+        for j in range(1,lena+1):
+            if a[i] >= linspace[j]:
                 continue
             else:
-                new_a[i]=j-1
+                new_a[i]=j
                 break
             
     return new_a
