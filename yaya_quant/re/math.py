@@ -20,7 +20,7 @@ def scatter_continue(_a,lena):
     return a_count
 
 # label = 0, 1, 2, ...
-def class_continue(_a,lena):
+def class_continue(a,lena):
     a_max = a.max()
     a_min = a.min()
     new_a = -np.ones(len(a))
