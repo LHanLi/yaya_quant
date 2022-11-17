@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 
 # convert continue variable to discrete
