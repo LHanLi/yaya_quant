@@ -27,12 +27,12 @@ def class_continue(_a,lena):
     linspace = np.linspace(a_min,a_max,n+1)
     
     for i in range(len(a)):
-    diff = a[i]-linspace
-    for j in range(len(diff)):
-        if diff[j] >= 0:
-            continue
-        else:
-            new_a[i]=j-1
-            break
+        diff = a[i]-linspace
+        for j in range(len(diff)):
+            if diff[j] >= 0:
+                continue
+            else:
+                new_a[i]=j-1
+                break
             
     return new_a
