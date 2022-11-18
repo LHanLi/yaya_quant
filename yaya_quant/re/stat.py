@@ -9,7 +9,7 @@ import pandas as pd
 def continue_chi2(X,y,y_n):
     from sklearn.preprocessing import LabelBinarizer
     # (1,0,0) (0,1,0) (0,0,1) for three label
-    y = LabelBinarizer().fit_transform(yaya_math.class_continue(y,y_n))
+    y = LabelBinarizer().fit_transform(basic.class_continue(y,y_n))
     observed = X.T.dot(y) # n feature * y_n
     
     feature_sum = X.sum(axis=0).reshape(1,-1)  # if class n is 1,1,1,1...   1*n feature matrix
