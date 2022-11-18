@@ -3,7 +3,7 @@ import copy
 
 
 # convert continue variable to discrete and count, lena fenge fenshu
-def scatter_continue(_a,lena):
+def count_continue(_a,lena):
     a = copy.copy(_a)
     a.sort()
     a_d = (a[-1]-a[0])/lena
