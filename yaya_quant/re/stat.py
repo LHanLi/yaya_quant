@@ -1,5 +1,5 @@
 import scipy
-import basic
+from yaya_quant.re import basic
 import pandas as pd
 
 
