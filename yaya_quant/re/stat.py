@@ -1,5 +1,5 @@
 import scipy
-import yaya_math
+import basic
 import pandas as pd
 
 
