@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import MultipleLocator
 
 
-del matplot(r,c):
+def matplot(r,c):
   #plot
   #run configuration 
   plt.rcParams['font.size']=8
@@ -20,8 +20,18 @@ del matplot(r,c):
   plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace = None, wspace=0.5)
   
   return fig,ax
-  
-  
+"""
+x_major_locator = MultipleLocator(1)
+y_major_locator = MultipleLocator(1)
+ax[0].xaxis.set_major_locator(x_major_locator)
+ax[0].yaxis.set_major_locator(y_major_locator)
+ax[0].set_xlim(-6.5,3)
+ax[0].set_ylim(-6.5,3)
+
+
+plt.savefig('dncompare.pdf')
+"""
+
   
   
   
