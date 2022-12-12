@@ -1,8 +1,9 @@
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import MultipleLocator
 
 
 def matplot(r,c):
+  import matplotlib.pyplot as plt
+  from matplotlib.pyplot import MultipleLocator
+
   #plot
   #run configuration 
   plt.rcParams['font.size']=8
