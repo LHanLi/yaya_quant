@@ -1,6 +1,6 @@
 
 
-def matplot(r,c):
+def matplot(r,c,sharex,sharey,w,d):
   import matplotlib.pyplot as plt
   from matplotlib.pyplot import MultipleLocator
 
@@ -17,7 +17,7 @@ def matplot(r,c):
   plt.rcParams['lines.markersize'] = 1
     
   #subplot
-  fig,ax = plt.subplots(r,c)
+  fig,ax = plt.subplots(r,c,sharex=sharex, sharey=sharey,figsize=(w,d))
   plt.subplots_adjust(left=None, bottom=None, right=None, top=None, hspace = None, wspace=0.5)
   
   return fig,ax
