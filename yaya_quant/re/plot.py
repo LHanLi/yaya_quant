@@ -15,6 +15,9 @@ def matplot(r,c,sharex,sharey,w,d):
   plt.rcParams["savefig.transparent"]='True'
   plt.rcParams['lines.linewidth']=0.8
   plt.rcParams['lines.markersize'] = 1
+  
+  #baozhengtupianwanquanzhanshi
+  plt.tight_layout()
     
   #subplot
   fig,ax = plt.subplots(r,c,sharex=sharex, sharey=sharey,figsize=(w,d))
