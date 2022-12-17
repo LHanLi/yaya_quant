@@ -32,8 +32,11 @@ ax[0].yaxis.set_major_locator(y_major_locator)
 ax[0].set_xlim(-6.5,3)
 ax[0].set_ylim(-6.5,3)
 
+plt.tight_layout() # quanbuzhanshi
 
-plt.savefig('dncompare.pdf')
+l1 = ax[0].legend((),())
+plt.gca().add_artist(l1)  # two legend
+
 """
 
   
