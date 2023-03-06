@@ -1,15 +1,9 @@
 import datetime  # For datetime objects
-import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
 import pandas as pd
 # Import the backtrader platform
 import backtrader as bt
 import numpy as np
-import csv
-import pymysql
-from sqlalchemy import create_engine
-from backtrader_plotting import Bokeh
-from backtrader_plotting.schemes import Tradimo
+import talib 
 
 ##########################################################################################################
 #################################################动量类####################################################
@@ -17,25 +11,141 @@ from backtrader_plotting.schemes import Tradimo
 
 class SmaCross(bt.Strategy):
     # 定义参数
-    params = dict(period=5)  # 移动平均期数
+    dict_params = dict(period_fast=5, period_slow=10)
+    df_params = pd.DataFrame(dict_params, index=[0])
+    params = dict(dataframe=df_params,)
                   
     def __init__(self):
+        # 记录交易次数
+        self.trade_times = 0 
         # 移动平均线指标
-        self.move_average = bt.ind.MovingAverageSimple(
-            self.datas[0].close, period=self.params.period)
-        self.
+        self.fast_sma = bt.ind.MovingAverageSimple(
+            self.datas[0].close, period=self.p.dataframe['period_fast'][0])
+        self.slow_sma = bt.ind.MovingAverageSimple(
+            self.datas[0].close, period=self.p.dataframe['period_slow'][0])
+        self.crossover = bt.ind.CrossOver(self.fast_sma, self.slow_sma)
 
-    def next(self):
+        self.order = None
+
+# 日志函数
+    def log(self, txt, dt=None):
+        ''' Logging function fot this strategy'''
+        dt = dt or self.datas[0].datetime.date(0)
+        print('%s, %s' % (dt.isoformat(), txt))
         
-        if not self.position.size:  # 还没有仓位
-            # 当日收盘价上穿5日均线，创建买单，买入100股
-            if self.datas[0].close[-1] < self.move_average.sma[
-                    -1] and self.datas[0].close[0] > self.move_average.sma[0]:
+# 准备
+    def prenext(self):
+        self.log("not mature")
+
+# 最先执行
+    def start(self):
+        self.log("Start!")
+#            self.mystats = open("log_huice_broker.txt", "w")
+#            self.mystats.write('datetime value hold\n')
+
+# every bar
+    def next(self):
+        self.log('next')
+# 如果有未决订单则跳过
+        if self.order:
+            self.log('skip next')
+            return
+        
+        if not self.position:
+            if self.crossover > 0:
+                self.log('buy')
                 self.buy(size=100)
-        # 有仓位，并且当日收盘价下破5日均线，创建卖单，卖出100股
-        elif self.datas[0].close[-1] > self.move_average.sma[-1] and self.datas[
-                0].close[0] < self.move_average.sma[0]:
+        elif self.crossover < 0:
+            self.log('sell')
             self.sell(size=100)
+
+
+
+    def stop(self):
+    #   self.mystats.write('%s'%self.trade_times)
+    #    self.mystats.close()
+        self.log("death")
+
+# 一次订单
+    def notify_order(self, order):
+    # 提交， 接收
+        if order.status in [order.Submitted, order.Accepted]:
+            # Buy/Sell order submitted/accepted to/by broker - Nothing to do
+            return
+
+        # Check if an order has been completed
+        # Attention: broker could reject order if not enougth cash
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                self.log(
+                    'BUY EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                    (order.executed.price,
+                        order.executed.value,
+                        order.executed.comm))
+            else:  # Sell
+                self.log('SELL EXECUTED, Price: %.2f, Cost: %.2f, Comm %.2f' %
+                            (order.executed.price,
+                            order.executed.value,
+                            order.executed.comm))
+
+            self.bar_executed = len(self)
+            self.trade_times += 1
+
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log('Order Canceled/Margin/Rejected')
+
+        self.order = None
+# 一次交易
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+        self.log('OPERATION PROFIT, GROSS %.2f, NET %.2f, comm %.2f' %
+                    (trade.pnl, trade.pnlcomm, trade.commission))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

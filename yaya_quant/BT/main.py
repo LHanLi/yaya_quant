@@ -1,7 +1,7 @@
 import datetime  # For datetime objects
 #import os.path  # To manage paths
 #import sys  # To find out the script name (in argv[0])
-#import pandas as pd
+import pandas as pd
 # Import the backtrader platform
 import backtrader as bt
 #import numpy as np
@@ -17,8 +17,9 @@ from backtrader_plotting.schemes import Tradimo
 #data0 =  pd.read_sql_table('commodity_index',engine,index_col='date',columns=['index_name','open','high','low','close','volume','oi'])
 
 
-def Data(df_price, start=datetime.datetime(2014, 1, 21), end=datetime.datetime(2021,1, 21)):
-    
+# df_price
+# index: datetime(e.g. pd.to_datetime(20140121))  open, close, low, high, vol, oi, cap
+def Data(df_price, start=datetime.datetime(2014, 1, 21), end=datetime.datetime(2021,1, 21)): 
     data = bt.feeds.PandasData(dataname=df_price,
                             fromdate = start,
                             todate = end
@@ -26,19 +27,14 @@ def Data(df_price, start=datetime.datetime(2014, 1, 21), end=datetime.datetime(2
     return data
 
 
-# df_price
-# index: date    index_name, open, high, low, close, volume, oi
 # muti
 # single
 
 # BT single security 
-def BT(data, Strategy, account=1000000.0, code_name='test', huice_name='test', plot=False):
+def BT(data, Strategy, df_params=None, account=1000000.0, slippage_fixed = 0.0, code_name='test', huice_name='test', plot=False):
     # constant
     comm = 0.0005
-    
-    
-    
-    
+
     # Create a cerebro entity
     cerebro = bt.Cerebro(stdstats=False)
     cerebro.addobserver(bt.observers.Broker)
@@ -49,14 +45,19 @@ def BT(data, Strategy, account=1000000.0, code_name='test', huice_name='test', p
 
     # Set the commission 万5(by default) comm
     cerebro.broker.setcommission(commission=comm)
-
-
+    # 滑点 
+    cerebro.broker.set_slippage_fixed(slippage_fixed) #固定滑点
+#cerebro.broker.set_slippage_perc()
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data,name=code_name)
 
     # strategy and run
-    cerebro.addstrategy(Strategy)
+    # 如果给定了df存储参数
+    if isinstance(df_params, pd.DataFrame):
+        cerebro.addstrategy(Strategy, dataframe=df_params)
+    else:
+        cerebro.addstrategy(Strategy)
 
     # Set our account cash start
     cerebro.broker.setcash(account)
@@ -92,9 +93,9 @@ def BT(data, Strategy, account=1000000.0, code_name='test', huice_name='test', p
     print(strat.analyzers._DrawDown.get_analysis())
 
     # 添加回测结果到文件 daily_return.csv
-    f = open("%s_daily_return.csv"%huice_name,"w")
-    f.write(daily_return)
-    f.close()
+#    f = open("%s_daily_return.csv"%huice_name,"w")
+#    f.write(daily_return)
+#    f.close()
     
 #    f = open("huice_log.txt", "a+")
 #    f.write("%s    %s    %s    %.3f    %s \n"%(huice_name,start,end,cerebro.broker.getvalue(),strat.analyzers._SharpeRatio.get_analysis()['sharperatio']))
