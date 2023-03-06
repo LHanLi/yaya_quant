@@ -11,6 +11,32 @@ from sqlalchemy import create_engine
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 
+##########################################################################################################
+#################################################动量类####################################################
+#########################################################################################################
+
+class SmaCross(bt.Strategy):
+    # 定义参数
+    params = dict(period=5)  # 移动平均期数
+                  
+    def __init__(self):
+        # 移动平均线指标
+        self.move_average = bt.ind.MovingAverageSimple(
+            self.datas[0].close, period=self.params.period)
+
+    def next(self):
+        
+        if not self.position.size:  # 还没有仓位
+            # 当日收盘价上穿5日均线，创建买单，买入100股
+            if self.datas[0].close[-1] < self.move_average.sma[
+                    -1] and self.datas[0].close[0] > self.move_average.sma[0]:
+                self.buy(size=100)
+        # 有仓位，并且当日收盘价下破5日均线，创建卖单，卖出100股
+        elif self.datas[0].close[-1] > self.move_average.sma[-1] and self.datas[
+                0].close[0] < self.move_average.sma[0]:
+            self.sell(size=100)
+
+
 
 
 # single
