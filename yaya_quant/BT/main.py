@@ -23,7 +23,10 @@ from backtrader_plotting.schemes import Tradimo
 # single
 
 # BT single security 
-def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test',comm=0.0005,plot=False):
+def BT(df_price,Strategy,start=datetime.datetime(2014, 1, 21),end=datetime.datetime(2021,1, 21),huice_name='test',plot=False):
+    # constant
+    comm = 0.0005
+    
     import csv
     data = bt.feeds.PandasData(dataname=df_price,
                             fromdate = start,
