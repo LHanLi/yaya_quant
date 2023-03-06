@@ -1,13 +1,13 @@
 import datetime  # For datetime objects
-import os.path  # To manage paths
-import sys  # To find out the script name (in argv[0])
-import pandas as pd
+#import os.path  # To manage paths
+#import sys  # To find out the script name (in argv[0])
+#import pandas as pd
 # Import the backtrader platform
 import backtrader as bt
-import numpy as np
-import csv
-import pymysql
-from sqlalchemy import create_engine
+#import numpy as np
+#import csv
+#import pymysql
+#from sqlalchemy import create_engine
 from backtrader_plotting import Bokeh
 from backtrader_plotting.schemes import Tradimo
 
@@ -36,8 +36,6 @@ def BT(data, Strategy, account=1000000.0, code_name='test', huice_name='test', p
     # constant
     comm = 0.0005
     
-    # Set the commission 万5(by default) comm
-    cerebro.broker.setcommission(commission=comm)
     
     
     
@@ -49,9 +47,13 @@ def BT(data, Strategy, account=1000000.0, code_name='test', huice_name='test', p
     cerebro.addobserver(bt.observers.DrawDown)
     cerebro.addobserver(bt.observers.TimeReturn)
 
-    
+    # Set the commission 万5(by default) comm
+    cerebro.broker.setcommission(commission=comm)
+
+
+
     # Add the Data Feed to Cerebro
-    cerebro.adddata(data,name=codename)
+    cerebro.adddata(data,name=code_name)
 
     # strategy and run
     cerebro.addstrategy(Strategy)
