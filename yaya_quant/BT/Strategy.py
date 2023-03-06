@@ -23,6 +23,7 @@ class SmaCross(bt.Strategy):
         # 移动平均线指标
         self.move_average = bt.ind.MovingAverageSimple(
             self.datas[0].close, period=self.params.period)
+        self.
 
     def next(self):
         
