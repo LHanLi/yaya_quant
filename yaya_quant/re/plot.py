@@ -1,7 +1,7 @@
 
-
+# import matplotlib.pyplot as plt
+# row, column, ., ., width, high
 def matplot(r,c,sharex,sharey,w,d):
-  import matplotlib.pyplot as plt
   from matplotlib.pyplot import MultipleLocator
 
   #plot
@@ -16,7 +16,7 @@ def matplot(r,c,sharex,sharey,w,d):
   plt.rcParams['lines.linewidth']=0.8
   plt.rcParams['lines.markersize'] = 1
   
-  #baozhengtupianwanquanzhanshi
+  #保证图片完全展示
   plt.tight_layout()
     
   #subplot
