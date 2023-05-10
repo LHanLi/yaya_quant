@@ -7,6 +7,20 @@ from sklearn.pipeline import make_pipeline
 import numpy as np
 import matplotlib.pyplot as plt
 
+# 一元线性回归
+# x_t,y_t is array
+# y_t = alpha + beta x_t + epsilon_t
+def Reg(x, y):
+    lxx = ((x-x.mean())**2).sum()
+    lyy = ((y-y.mean())**2).sum()
+    lxy = ((x-x.mean())*(y-y.mean())).sum()
+
+    beta = lxy/lxx
+    alpha = y.mean() - beta*x.mean()
+
+    return alpha, beta 
+
+
 
 # reg
 def Lasso_reg(fit_corr, fit_value):

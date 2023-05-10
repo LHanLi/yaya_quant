@@ -40,10 +40,3 @@ def class_continue(a,lena):
     return new_a
     
     
-#basic  need trade.data in df
-def is_trade_day(data, date):
-    return date in data.df.index
-
-
-
-
