@@ -27,7 +27,6 @@ def drop_row(df, col, value_list):
 
     return df, drop_all
 
-
 # merge的改进， 避免列被重新命名(新加的为a_，并且保持on的列不变
 def nmerge(df, df_add, on):
     new_name = ['a_' + x for x in df_add.columns]
@@ -41,7 +40,6 @@ def nmerge(df, df_add, on):
 
     # merge
     return df.merge(df_add, on=on)
-
 
 # 将df中所有行按照年份划分，返回一个列表包含各年度的行，从最早开始
 def divide_row(df):
@@ -74,8 +72,6 @@ def combine_row(df, unique_col='date', combine_col='order_status'):
         df_ = pd.DataFrame({unique_col:date, combine_col:[list_status]})
         df_result = pd.concat([df_result, df_])
     return df_result
-
-
 
 # x, y 自变量与因变量的列名（单自变量）
 # 返回DataFrame  0，1分别为回归系数与截距
@@ -140,9 +136,43 @@ def cal_MA(df, cal, period=5):
     df = df.sort_index(level=['date','code']) 
     return df
 
+def cal_Zscore(df, cal, period=5):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+# 计算MA
+    new_col = cal + '_Zscore_' + str(period)
+    df[new_col] =  (df[cal].values - df.groupby('code', sort=False).rolling(period)[cal].mean().values)/df.groupby('code', sort=False).rolling(period)[cal].std().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code'])
+    return df
 
-# 计算对数收益率, ln(close/open), 波动率（年化）， 平均值   
-def cal_RV(df, n=10):
+# 计算字段sum(滑动窗口)
+def cal_RollingSum(df, cal, period=5):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+# 计算MA
+    new_col = cal + '_RollingSum_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].sum().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
+    return df
+
+# 计算标准差
+def cal_std(df, cal, period=10):
     df = copy.deepcopy(df)
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
@@ -150,15 +180,35 @@ def cal_RV(df, n=10):
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
     # 计算日内对数收益率
-    df['R'] = (df['close']/df['open']).apply(lambda x: math.log(x))
+    new_col = cal + '_RollingStd_' + str(period)
 # 计算对数收益率波动率
-    df['RV'] =  df.groupby('code', sort=False).rolling(n)['R'].std().values
+    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].std().values
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
     df = df.set_index(['date','code'])
     df = df.sort_index(level=['date','code']) 
     return df
+
+# 计算最大值
+def cal_max(df, cal, period=10):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    # 计算日内对数收益率
+    new_col = cal + '_RollingMax_' + str(period)
+# 计算对数收益率波动率
+    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].max().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
+    return df
+
 
 # 收盘价计算年化波动率  过去n bar数据
 def cal_HV(df, n=20):
@@ -172,14 +222,13 @@ def cal_HV(df, n=20):
     df['returns'] = (df['close']/(df['close'].shift())).apply(lambda x: np.log(x))
 # 计算对数收益率波动率
     name = 'HV_' + str(n)
-    df[name] =  df.groupby('code', sort=False).rolling(n)['returns'].std().values * np.sqrt(250)
+    df[name] =  df.groupby('code', sort=False).rolling(n)['returns'].std().values * np.sqrt(252)
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
     df = df.set_index(['date','code'])
     df = df.sort_index(level=['date','code']) 
     return df.drop('returns', axis=1)
-
 
 # 获得df中x_name列为自变量 y_name列为因变量的线性回归结果 
 def cal_reg(df, x_name, y_name, n):

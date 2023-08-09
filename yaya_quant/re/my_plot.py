@@ -4,18 +4,19 @@
 # in jupyter
 # import matplotlib; matplotlib.use('Agg')  
 # pylint: disable=multiple-statements
-# row, column, ., ., width, high
+# row, column, 'col', 'row', width, high
 def matplot(r=1, c=1, sharex=False, sharey=False, w=8, d=5):
   import seaborn as sns
-  from matplotlib.pyplot import MultipleLocator
   import matplotlib.pyplot as plt
   # don't use sns style
   sns.reset_orig()
   #plot
   #run configuration 
-  plt.rcParams['font.size']=12
-  plt.rcParams['font.family'] = 'Arial'
-  plt.rcParams['axes.linewidth']=0.5
+  plt.rcParams['font.size']=14
+  plt.rcParams['font.family'] = 'KaiTi'
+  #plt.rcParams['font.family'] = 'Arial'
+  plt.rcParams["axes.unicode_minus"]=False #该语句解决图像中的“-”负号的乱码问题
+  plt.rcParams['axes.linewidth']=1
   plt.rcParams['axes.grid']=True
   plt.rcParams['grid.linestyle']='--'
   plt.rcParams['grid.linewidth']=0.2
@@ -48,13 +49,20 @@ ax[0].yaxis.set_major_locator(y_major_locator)
 ax[0].set_xlim(-6.5,3)
 ax[0].set_ylim(-6.5,3)
 
-"""
+# 中文楷体
+import matplotlib
+matplotlib.rc("font",family='KaiTi')
+plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+FONT = matplotlib.font_manager.FontProperties(fname = './FangSong.ttf')
+# fontproperties = FONT
 
+# 图片保存
+plt.savefig
+# 防止被裁剪掉信息
+bbox_inches = 'tight'
+"""
   
-  
-  
-  
-  
-  
-  
-  
+
+
+
+
