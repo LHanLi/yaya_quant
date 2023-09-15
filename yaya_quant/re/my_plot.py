@@ -23,7 +23,7 @@ def matplot(r=1, c=1, sharex=False, sharey=False, w=8, d=5):
   plt.rcParams["savefig.transparent"]='True'
   plt.rcParams['lines.linewidth']=0.8
   plt.rcParams['lines.markersize'] = 1
-  
+   
   #保证图片完全展示
   plt.tight_layout()
     

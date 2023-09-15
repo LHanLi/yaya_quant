@@ -84,14 +84,30 @@ def rolling_reg(df, x_name, y_name, n):
     # 回归的x和y
     x = df[x_name]
     y = df[y_name]
+#    def func(x, y):
+#        # 可能出现连续0值造成错误，这时使用np.nan填充
+#        try:
+#            result = np.polyfit(x, y, deg=1)
+#        except:
+#            # 一元回归情况
+#            result = np.ones(2)*np.nan
+#        return result
     def func(x, y):
-        # 可能出现连续0值造成错误，这时使用np.nan填充
-        try:
-            result = np.polyfit(x, y, deg=1)
-        except:
-            # 一元回归情况
-            result = np.ones(2)*np.nan
-        return result
+        lxx = ((x-x.mean())**2).sum()
+        #lyy = ((y-y.mean())**2).sum()
+        lxy = ((x-x.mean())*(y-y.mean())).sum()
+    # 斜率与截距
+        beta = lxy/lxx
+        alpha = y.mean() - beta*x.mean()
+    # Sum of Reg/Error/Total  r2
+        #SSE2 = ((y-(alpha+x*beta))**2).sum()
+        #SSR2 = ((alpha+x*beta - y.mean())**2).sum()
+        #SST2 = SSR2 + SSE2
+        #r2 = SSR2/SST2 
+        r = x.corr(y)
+    # corr**2  = r2 一元线性回归
+        #corr = x.corr(y)
+        return beta, alpha, r 
     result = rolling_apply(func, n, x, y)
 # 添加index
     result = pd.DataFrame(result, index=df.index)
@@ -120,7 +136,7 @@ def cal_diff(df, cal='close', n=1):
 
 # 计算字段MA
 def cal_MA(df, cal, period=5):
-    df = copy.deepcopy(df)
+    df = df.copy()
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
@@ -128,7 +144,7 @@ def cal_MA(df, cal, period=5):
     df = df.sort_index(level=['code','date'])
 # 计算MA
     new_col = cal + '_MA_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].mean().values
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -137,15 +153,17 @@ def cal_MA(df, cal, period=5):
     return df
 
 def cal_Zscore(df, cal, period=5):
-    df = copy.deepcopy(df)
+    df = df.copy()
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
-# 计算MA
+# 计算MA 除0的填0,时间窗口不够的按照存在的长度计算
     new_col = cal + '_Zscore_' + str(period)
-    df[new_col] =  (df[cal].values - df.groupby('code', sort=False).rolling(period)[cal].mean().values)/df.groupby('code', sort=False).rolling(period)[cal].std().values
+    df[new_col] =  (df[cal].values - df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values)\
+                             /df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().replace(0, np.nan).values
+    df[new_col] = df[new_col].fillna(0)
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -154,15 +172,14 @@ def cal_Zscore(df, cal, period=5):
     return df
 
 # 计算字段sum(滑动窗口)
-def cal_RollingSum(df, cal, period=5):
-    df = copy.deepcopy(df)
+def cal_Sum(df, cal, period=5):
+    df = df.copy()
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
-# 计算MA
-    new_col = cal + '_RollingSum_' + str(period)
+    new_col = cal + '_Sum_' + str(period)
     df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].sum().values
 # 将index变回 date code
     df = df.reset_index()
@@ -172,17 +189,15 @@ def cal_RollingSum(df, cal, period=5):
     return df
 
 # 计算标准差
-def cal_std(df, cal, period=10):
+def cal_Std(df, cal, period=10):
     df = copy.deepcopy(df)
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
-    # 计算日内对数收益率
-    new_col = cal + '_RollingStd_' + str(period)
-# 计算对数收益率波动率
-    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].std().values
+    new_col = cal + '_Std_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().values
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -191,17 +206,15 @@ def cal_std(df, cal, period=10):
     return df
 
 # 计算最大值
-def cal_max(df, cal, period=10):
+def cal_Max(df, cal, period=10):
     df = copy.deepcopy(df)
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
-    # 计算日内对数收益率
-    new_col = cal + '_RollingMax_' + str(period)
-# 计算对数收益率波动率
-    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].max().values
+    new_col = cal + '_Max_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].max().values
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -209,6 +222,56 @@ def cal_max(df, cal, period=10):
     df = df.sort_index(level=['date','code']) 
     return df
 
+# 计算最小值
+def cal_Min(df, cal, period=10):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    new_col = cal + '_Min_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].min().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
+    return df
+
+# 计算偏度
+def cal_Skew(df, cal, period=10):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    new_col = cal + '_Skew_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].skew().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
+    return df
+
+# 计算峰度
+def cal_Kurt(df, cal, period=10):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    new_col = cal + '_Kurt_' + str(period)
+    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].kurt().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
+    return df
 
 # 收盘价计算年化波动率  过去n bar数据
 def cal_HV(df, n=20):
@@ -222,7 +285,7 @@ def cal_HV(df, n=20):
     df['returns'] = (df['close']/(df['close'].shift())).apply(lambda x: np.log(x))
 # 计算对数收益率波动率
     name = 'HV_' + str(n)
-    df[name] =  df.groupby('code', sort=False).rolling(n)['returns'].std().values * np.sqrt(252)
+    df[name] =  df.groupby('code', sort=False).rolling(n, min_periods=1)['returns'].std().values * np.sqrt(252)
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -244,7 +307,8 @@ def cal_reg(df, x_name, y_name, n):
     # 命名规则
     name_beta = x_name + '-' + y_name + '--beta' +str(n)
     name_alpha = x_name + '-' + y_name + '--alpha'+str(n)
-    df[[name_beta,name_alpha]] = df_reg
+    name_r = x_name + '-' + y_name + '--r'+str(n)
+    df[[name_beta,name_alpha, name_r]] = df_reg
 
     # 将index变回 date code
     df = df.reset_index()
@@ -255,6 +319,17 @@ def cal_reg(df, x_name, y_name, n):
     return df
 
 
+def cal_CrossReg(df_, x_name, y_name, series=False):
+    df = copy.copy(df_)
+    name = y_name + '-' + x_name + '--alpha'
+    beta = df.groupby('date').apply(lambda x: ((x[y_name]-x[y_name].mean())*(x[x_name]-x[x_name].mean())).sum()/((x[x_name]-x[x_name].mean())**2).sum())
+    gamma = df.groupby('date').apply(lambda x: x[y_name].mean() - beta[x.index[0][0]]*x[x_name].mean())
+    r = df.groupby('date').apply(lambda x: np.sqrt(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum()/(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum() + ((x[y_name]-(gamma[x.index[0][0]] + x[x_name]*beta[x.index[0][0]]))**2).sum()))) 
 
+    df[name] = df.groupby('date').apply(lambda x: x[y_name] - beta[x.index[0][0]]*x[x_name] - gamma[x.index[0][0]]).values
 
+    if series:
+        return df, beta, gamma, r
+    else:
+        return df
 

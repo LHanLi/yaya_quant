@@ -20,7 +20,6 @@ def plot_diff(attr='close',multi_A=1,secu_A='RB',main_A='10',multi_B=1,secu_B='R
     # 提取code中是字母的部分，'.'前两位代表月份
     dataB = df_price[df_price.code.apply(lambda x: secu_B == ''.join([i for i in x[:2] if i.isalpha()]) and x.split('.')[0][-2:] == main_B)]
 
-
     # remove jiaogeyue
     dataA = dataA[dataA['date'].apply(lambda x: x.date().month != int(main_A))]
     dataB = dataB[dataB['date'].apply(lambda x: x.date().month != int(main_B))]

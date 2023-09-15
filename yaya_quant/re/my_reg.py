@@ -14,14 +14,17 @@ def L_Reg(x, y):
     lxx = ((x-x.mean())**2).sum()
     lyy = ((y-y.mean())**2).sum()
     lxy = ((x-x.mean())*(y-y.mean())).sum()
-
 # 斜率与截距
     beta = lxy/lxx
     alpha = y.mean() - beta*x.mean()
-
-    return beta, alpha
-
-
+# Sum of Reg/Error/Total  r2
+    SSE2 = ((y-(alpha+x*beta))**2).sum()
+    SSR2 = ((alpha+x*beta - y.mean())**2).sum()
+    SST2 = SSR2 + SSE2
+    r2 = SSR2/SST2 
+# corr
+    corr = x.corr(y)
+    return beta, alpha, r2, corr
 
 
 # reg

@@ -35,8 +35,10 @@ class MyOrder():
     # int 
     def __init__(self, code, order_type, order_vol):
         self.code = code
+        # 24
         if order_type == 'sell':
             self.order_type = xtconstant.STOCK_SELL
+        # 23
         if order_type == 'buy':
             self.order_type = xtconstant.STOCK_BUY
         self.order_vol = order_vol
@@ -124,9 +126,18 @@ class QMT():
         if price=='marketMake':
             mid_price = (tick_data['bidPrice'][0] + tick_data['askPrice'][0])/2
             if myorder.order_type == xtconstant.STOCK_BUY:
-                orderPrice = min(orderPrice, mid_price)
+                # 没有委托单时mid_price为0
+                if mid_price != 0:
+                    orderPrice = min(orderPrice, mid_price)
             else:
                 orderPrice = max(orderPrice, mid_price)
+        elif price=='fast':
+            if myorder.order_type == xtconstant.STOCK_BUY:
+                # 卖5价格
+                orderPrice = tick_data['askPrice'][4]
+            else:
+                # 买5价格
+                orderPrice = tick_data['bidPrice'][4]
         # 订单需冻结金额
         if myorder.order_type == xtconstant.STOCK_BUY:
             cash_need = orderPrice*myorder.order_vol
@@ -167,34 +178,35 @@ class QMT():
         for code in target_amount.keys():
             # 当天还未成交则直接略过
             if Price[code]['lastPrice'] == 0:
-                pass
+                lastprice = Price[code]['lastClose']
             else:
-                # 如果无持仓 则买入
-                if code not in cur_hold_vol.index:
-                    vol = target_amount[code]/Price[code]['lastPrice']
+                lastprice = Price[code]['lastPrice']
+            # 如果无持仓 则买入
+            if code not in cur_hold_vol.index:
+                vol = target_amount[code]/lastprice
+                vol = vol - vol%min_vol
+                vol = int(vol)
+                if vol != 0:
+                    buy_vol[code] = vol
+            else:
+                deltaamount = target_amount[code] - cur_hold_amount[code]
+                # 需要买入
+                if deltaamount > 0:
+                    vol = deltaamount/lastprice
                     vol = vol - vol%min_vol
                     vol = int(vol)
                     if vol != 0:
                         buy_vol[code] = vol
                 else:
-                    deltaamount = target_amount[code] - cur_hold_amount[code]
-                    # 需要买入
-                    if deltaamount > 0:
-                        vol = deltaamount/Price[code]['lastPrice']
+                    # 全部卖出
+                    if target_amount[code] == 0:
+                        sell_vol[code] = cur_hold_vol[code]
+                    else:
+                        vol = -deltaamount/lastprice
                         vol = vol - vol%min_vol
                         vol = int(vol)
                         if vol != 0:
-                            buy_vol[code] = vol
-                    else:
-                        # 全部卖出
-                        if target_amount[code] == 0:
-                            sell_vol[code] = cur_hold_vol[code]
-                        else:
-                            vol = -deltaamount/Price[code]['lastPrice']
-                            vol = vol - vol%min_vol
-                            vol = int(vol)
-                            if vol != 0:
-                                sell_vol[code] = vol
+                            sell_vol[code] = vol
         return buy_vol, sell_vol
     # 由买卖张数规划订单(拆单), 最小订单张数
     def split_orders(self, buy_vol = {}, sell_vol = {}, split_vol=30):
@@ -343,11 +355,18 @@ class QMT():
             self.xt_trader.cancel_order_stock(self.acc, i.order_id)
     # 重新提交订单
     def resuborders(self, orders): 
+        #for i in orders:
+        #    # 取消之前订单
+        #    self.xt_trader.cancel_order_stock(self.acc, i.order_id)
+        # 等待5秒（确保所有订单全部取消）
+        time.sleep(5)
         for i in orders:
+            # 先取消次订单
+            self.xt_trader.cancel_order_stock(self.acc, i.order_id)
+            # 再等待2秒（避免同一合约订单快速堆积大量订单）
+            time.sleep(2)
             # 订单未成部分
             vol = i.order_volume - i.traded_volume
-            # 取消之前订单
-            self.xt_trader.cancel_order_stock(self.acc, i.order_id)
             # 重新按照myorder提交规则提交
             if i.order_type == xtconstant.STOCK_BUY:
                 myorder = MyOrder(i.stock_code, 'buy', vol)

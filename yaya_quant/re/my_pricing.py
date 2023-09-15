@@ -71,15 +71,18 @@ def Vega(S, K, T, sigma, r=0.03, option='call'):
 
 # 隐含波动率,  P 期权价格
 def IV(P,S,K,T,r=0.03, option='call'):      #从0.001 - 1.000进行二分查找
-    sigma_min = 0.001           # 设定波动率初始最小值
-    sigma_max = 1.000           # 设定波动率初始最大值
+    sigma_min = 1e-10           # 设定波动率初始最小值
+    sigma_max = 10.00           # 设定波动率初始最大值
 #    sigma_mid = (sigma_min + sigma_max) / 2
     V_min = BSM(S, K, T, sigma_min, r, option)
     V_max = BSM(S, K, T, sigma_max, r, option)
 #    V_mid = BSM(S,K,sigma_mid,r,T, option)
-    if P < V_min or P > V_max:
-        print('sigma out of bound')
+    if P < V_min:
+        print('IV less than 0')
         return 0                             # 隐波记为0
+    elif P > V_max:
+        print('IV big than 10')
+        return 10
     # 波动率差值收敛到0.01%为止
     diff = sigma_max - sigma_min
     while abs(diff) > 0.0001:
@@ -92,8 +95,6 @@ def IV(P,S,K,T,r=0.03, option='call'):      #从0.001 - 1.000进行二分查找
             sigma_max = sigma_mid
         diff = sigma_max - sigma_min
     return sigma_mid
-
-
 
 
 # 债券

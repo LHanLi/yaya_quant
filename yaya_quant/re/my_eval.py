@@ -59,13 +59,14 @@ def drawdown(net_value):
     
 
 # 接收收益率序列, bench为无风险利率
-def sharpe(returns, bench):
-    # 转化为对数收益率
-    returns = np.log(1+returns)
+def sharpe(returns, bench=0.03):
+    ## 转化为对数收益率
+    #returns = np.log(1+returns)
     years = (returns.index[-1] - returns.index[0]).days/365
     return_total = np.exp(returns.sum())
     return_annual = return_total**(1/years)-1
-    std_annual = np.exp(returns.std()*np.sqrt(250)) - 1
+    #std_annual = np.exp(returns.std()*np.sqrt(250)) - 1
+    std_annual = returns.std()*np.sqrt(250)
     sharpe = (return_annual - bench)/std_annual
     return sharpe, std_annual, return_annual
 

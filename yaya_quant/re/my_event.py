@@ -19,8 +19,7 @@ def count_dur(df, code = 'thscode'):
         df_['start_date'] = df_i.iloc[0]['date']
         df_['end_date'] = df_i.iloc[-1]['date']
         df_['count'] = len(df_i)
-        df_result = pd.concat([df_result, df_], ignore_index = True)
-    
+        df_result = pd.concat([df_result, df_], ignore_index = True) 
     return df_result
 
 
@@ -80,14 +79,6 @@ def event_return(dict_date, df_price, hold_days):
             df_return = df_return.append(append_dict, ignore_index=True)
         
     return df_return
-
-
-
-
-
-
-
-
 
 
 
