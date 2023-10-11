@@ -155,7 +155,8 @@ class QMT():
             # 提交失败
             return False
         else:
-            self.xt_trader.order_stock(self.acc, myorder.code, myorder.order_type, myorder.order_vol, xtconstant.FIX_PRICE, orderPrice)
+            self.xt_trader.order_stock(self.acc, myorder.code, myorder.order_type, \
+                                       myorder.order_vol, xtconstant.FIX_PRICE, orderPrice)
             return True
     # 由target_amount获得买卖张数
     def get_myorders_list(self, target_amount, min_vol=10):
@@ -209,7 +210,7 @@ class QMT():
                             sell_vol[code] = vol
         return buy_vol, sell_vol
     # 由买卖张数规划订单(拆单), 最小订单张数
-    def split_orders(self, buy_vol = {}, sell_vol = {}, split_vol=30):
+    def split_orders(self, buy_vol = {}, sell_vol = {}, split_vol=20):
         # 拆单 最小张数 split_vol
         myorders_list = []
         for code in buy_vol.keys():
@@ -227,19 +228,22 @@ class QMT():
             if n_orders>=1:
                 myorder_ = MyOrder(code, 'buy', split_vol+excess_vol)
                 myorders_list.append(myorder_)
+        # 卖单余数要卖出
         for code in sell_vol.keys():
-            # 买入张数
             vol = sell_vol[code]
             # 拆单后剩余张数
             excess_vol = vol%split_vol
             # 拆成单数
             n_orders = int(vol/split_vol)
-            # 最小单
             for i in range(n_orders-1):
                 myorder_ = MyOrder(code, 'sell', split_vol)
                 myorders_list.append(myorder_)
+            # 卖单余数要卖出
             if n_orders>=1:
                 myorder_ = MyOrder(code, 'sell', split_vol+excess_vol)
+                myorders_list.append(myorder_)
+            else:
+                myorder_ = MyOrder(code, 'sell', excess_vol)
                 myorders_list.append(myorder_)
         # 打乱订单顺序
         random.shuffle(myorders_list)
@@ -254,7 +258,8 @@ class QMT():
             myorders_queue.put(i)
         codes = [i.code for i in myorders_list]
         # 订单提交轮次等于订单数量最多的合约的订单数量
-        n_sub =pd.value_counts(codes)[0]
+        #n_sub =pd.value_counts(codes)[0]
+        n_sub = pd.Series(codes).value_counts().iloc[0]
         # 订单提交时间（分钟） 平均每秒可以提交18笔
         norders = len(myorders_list)
         if sub_dur == 'fast':
@@ -354,7 +359,7 @@ class QMT():
         for i in orders_list:
             self.xt_trader.cancel_order_stock(self.acc, i.order_id)
     # 重新提交订单
-    def resuborders(self, orders): 
+    def resuborders(self, orders, price='marketMaker'): 
         #for i in orders:
         #    # 取消之前订单
         #    self.xt_trader.cancel_order_stock(self.acc, i.order_id)
@@ -374,7 +379,7 @@ class QMT():
                 myorder = MyOrder(i.stock_code, 'sell', vol)
             else:
                 print('lost order')
-            if self.submyorder(myorder):
+            if self.submyorder(myorder, price):
                 pass
             else:
                 print('fail sub %s %s %s'%(i.order_type, i.stock_code, vol))

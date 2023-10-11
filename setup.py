@@ -19,6 +19,7 @@ setup(name='yaya_quant',
 
       license='#',
 
+      # numpy_ext0.9.8 is needed and rely on python=3.10.9, numpy=1.23.1
       packages=find_packages(),
       )
 
