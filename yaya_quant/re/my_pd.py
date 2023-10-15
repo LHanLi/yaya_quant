@@ -24,7 +24,6 @@ def drop_row(df, col, value_list):
             df = df.drop(df.index[df[col] == value].values)
             df = df.reset_index(drop = True)
         drop_all = pd.concat([drop_all, beishanchu], ignore_index=True)
-
     return df, drop_all
 
 # merge的改进， 避免列被重新命名(新加的为a_，并且保持on的列不变
@@ -113,11 +112,75 @@ def rolling_reg(df, x_name, y_name, n):
     result = pd.DataFrame(result, index=df.index)
     return result
 
+# 并行计算   可以保留顺序
+def parallel(df, func, n_core=12):
+    from joblib import Parallel, delayed
+    len_df = len(df)
+    sp = list(range(len_df)[::int(len_df/n_core+0.5)])[:-1] # 最后一个节点改为末尾
+    sp.append(len_df)
+    slc_gen = (slice(*idx) for idx in zip(sp[:-1],sp[1:]))
 
+    results = Parallel(n_jobs=n_core)(delayed(func)(df[slc]) for slc in slc_gen)
+    return pd.concat(results)
 
+def parallel_group(df, func, n_core=12, sort_by='code'):
+    from joblib import Parallel, delayed
+    results = Parallel(n_jobs=n_core)(delayed(func)(group) for name, group in df.groupby(sort_by))
+    return pd.concat(results)
 
 # 行情数据的常用计算
 # 数据格式为 mutiindex (date,code)   close...
+
+# 计算时间序列值
+# 数据df，函数名(Max, Min, Skew, Kurt, MA, Std)
+# 作用字段，滚动时间窗口长度，是否并行，并行核数
+# rolling输入series而不是df速度会明显提升
+def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=12):
+    df = copy.deepcopy(df)
+# inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    new_col = cal + '_' + func_name + '_' + str(period)
+    if parallel:
+        def func(df):
+            if func_name=='Max':
+                return df[cal].rolling(period, min_periods=1).max()
+            elif func_name=='Min':
+                return df[cal].rolling(period, min_periods=1).min()
+            elif func_name=='Skew':
+                return df[cal].rolling(period, min_periods=1).skew()
+            elif func_name=='Kurt':
+                return df[cal].rolling(period, min_periods=1).kurt()
+            elif func_name=='MA':
+                return df[cal].rolling(period, min_periods=1).mean()
+            elif func_name=='Std':
+                return df[cal].rolling(period, min_periods=1).std()
+            elif func_name=='Sum':
+                return df[cal].rolling(period, min_periods=1).sum()
+        df[new_col] =  parallel_group(df, func, n_core=n_core).values
+    else:
+        if func_name=='Max':
+            df[new_col] =  df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).max().values
+        elif func_name=='Min':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].min().values
+        elif func_name=='Skew':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].skew().values
+        elif func_name=='Kurt':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].kurt().values
+        elif func_name=='MA':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values
+        elif func_name=='Std':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().values
+        elif func_name=='Sum':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].sum().values
+# 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code'])
+    return df
 
 # 计算字段相较于上n个bar的收益率
 def cal_return(df, cal='close', n=1, log=False):
@@ -133,145 +196,6 @@ def cal_diff(df, cal='close', n=1):
     prevalue = df.groupby('code', sort=False).shift(n)[cal]
     result = df[cal] - prevalue
     return result
-
-# 计算字段MA
-def cal_MA(df, cal, period=5):
-    df = df.copy()
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-# 计算MA
-    new_col = cal + '_MA_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-def cal_Zscore(df, cal, period=5):
-    df = df.copy()
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-# 计算MA 除0的填0,时间窗口不够的按照存在的长度计算
-    new_col = cal + '_Zscore_' + str(period)
-    df[new_col] =  (df[cal].values - df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values)\
-                             /df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().replace(0, np.nan).values
-    df[new_col] = df[new_col].fillna(0)
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code'])
-    return df
-
-# 计算字段sum(滑动窗口)
-def cal_Sum(df, cal, period=5):
-    df = df.copy()
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Sum_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period)[cal].sum().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-# 计算标准差
-def cal_Std(df, cal, period=10):
-    df = copy.deepcopy(df)
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Std_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-# 计算最大值
-def cal_Max(df, cal, period=10):
-    df = copy.deepcopy(df)
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Max_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].max().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-# 计算最小值
-def cal_Min(df, cal, period=10):
-    df = copy.deepcopy(df)
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Min_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].min().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-# 计算偏度
-def cal_Skew(df, cal, period=10):
-    df = copy.deepcopy(df)
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Skew_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].skew().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
-
-# 计算峰度
-def cal_Kurt(df, cal, period=10):
-    df = copy.deepcopy(df)
-# inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    new_col = cal + '_Kurt_' + str(period)
-    df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].kurt().values
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df
 
 # 收盘价计算年化波动率  过去n bar数据
 def cal_HV(df, n=20):
@@ -294,22 +218,25 @@ def cal_HV(df, n=20):
     return df.drop('returns', axis=1)
 
 # 获得df中x_name列为自变量 y_name列为因变量的线性回归结果 
-def cal_reg(df, x_name, y_name, n):
+def cal_reg(df, x_name, y_name, n, parallel=False, n_core=12):
     df = copy.deepcopy(df)
     # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index()
     df = df.sort_values(by='code')
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
-
-    # 回归    去掉二级index中的code
-    df_reg = df.groupby('code', sort=False).apply(lambda df: rolling_reg(df.reset_index('code'), x_name, y_name, n))
     # 命名规则
     name_beta = x_name + '-' + y_name + '--beta' +str(n)
     name_alpha = x_name + '-' + y_name + '--alpha'+str(n)
     name_r = x_name + '-' + y_name + '--r'+str(n)
-    df[[name_beta,name_alpha, name_r]] = df_reg
-
+    if parallel:
+        def func(df):
+            return rolling_reg(df.reset_index('code'), x_name, y_name, n)
+        df[[name_beta, name_alpha, name_r]] =  parallel_group(df, func, n_core=n_core).values
+    else:
+        # 回归    去掉二级index中的code
+        df_reg = df.groupby('code', sort=False).apply(lambda df: rolling_reg(df.reset_index('code'), x_name, y_name, n))
+        df[[name_beta,name_alpha, name_r]] = df_reg
     # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
@@ -317,7 +244,6 @@ def cal_reg(df, x_name, y_name, n):
     df = df.sort_index(level=['date','code']) 
 
     return df
-
 
 def cal_CrossReg(df_, x_name, y_name, series=False):
     df = copy.copy(df_)
