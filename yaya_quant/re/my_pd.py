@@ -159,6 +159,11 @@ def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=1
                 return df[cal].rolling(period, min_periods=1).std()
             elif func_name=='Sum':
                 return df[cal].rolling(period, min_periods=1).sum()
+            elif func_name=='Zscore':
+                return (df[cal]-df[cal].rolling(period, min_periods=1).mean())/df[cal].rolling(period, min_periods=1).std().replace(0, np.nan)
+            elif func_name=='HV':
+                returns = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
+                return np.exp(returns.rolling(period, min_periods=1).std() * np.sqrt(252))-1
         df[new_col] =  parallel_group(df, func, n_core=n_core).values
     else:
         if func_name=='Max':
@@ -175,6 +180,14 @@ def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=1
             df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().values
         elif func_name=='Sum':
             df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].sum().values
+        elif func_name=='Zscore':
+            df[new_col] =  (df[cal].values - df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).mean().values)\
+                             /df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).std().replace(0, np.nan).values
+            df[new_col] = df[new_col].fillna(0)
+        elif func_name=='HV':
+            df['returns'] = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
+            df[new_col] =  np.exp(df.groupby('code', sort=False)['returns'].rolling(period, min_periods=1).std().values * np.sqrt(252))-1
+
 # 将index变回 date code
     df = df.reset_index()
     df = df.sort_values(by='date')
