@@ -219,7 +219,7 @@ def cal_HV(df, n=20):
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
     # 计算每日对数收益率   shift会自动在二级index中shift
-    df['returns'] = (df['close']/(df['close'].groupby('date').shift())).apply(lambda x: np.log(x))
+    df['returns'] = (df['close']/(df['close'].groupby('code').shift())).apply(lambda x: np.log(x))
 # 计算对数收益率波动率
     name = 'HV_' + str(n)
     df[name] =  df.groupby('code', sort=False).rolling(n, min_periods=1)['returns'].std().values * np.sqrt(252)
