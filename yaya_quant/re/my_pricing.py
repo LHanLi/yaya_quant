@@ -10,7 +10,7 @@ import math
 # S 标的价格， K 行权价格  T 剩余到期时间（交易日）  sigma 年化波动率  r 无风险收益率 c
 # all/put
 def BSM(S, K, T, sigma, r=0.03, option='call'):
-    # 波动率，利率全部统一到交易日
+    # 利率全部统一到交易日
     T = T/250
     r = r*365/250
     d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T)/(sigma*np.sqrt(T))
@@ -24,7 +24,7 @@ def BSM(S, K, T, sigma, r=0.03, option='call'):
 
 # Delta
 def Delta(S, K, T, sigma, r=0.03, option='call'):
-    # 波动率，利率全部统一到交易日
+    # 利率全部统一到交易日
     T = T/250
     r = r*365/250
     d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T)/(sigma*np.sqrt(T))
@@ -37,7 +37,7 @@ def Delta(S, K, T, sigma, r=0.03, option='call'):
 
 # Gamma
 def Gamma(S, K, T, sigma, r=0.03, option='call'):
-    # 波动率，利率全部统一到交易日
+    # 利率全部统一到交易日
     T = T/250
     r = r*365/250
     d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T)/(sigma*np.sqrt(T))
@@ -47,7 +47,7 @@ def Gamma(S, K, T, sigma, r=0.03, option='call'):
     return gamma
 
 def Theta(S, K, T, sigma, r=0.03, option='call'):
-    # 波动率，利率全部统一到交易日
+    # 利率全部统一到交易日
     T = T/250
     r = r*365/250
     d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T)/(sigma*np.sqrt(T))
@@ -60,7 +60,7 @@ def Theta(S, K, T, sigma, r=0.03, option='call'):
     return theta
 
 def Vega(S, K, T, sigma, r=0.03, option='call'):
-    # 波动率，利率全部统一到交易日
+    # 利率全部统一到交易日
     T = T/250
     r = r*365/250
     d1 = (np.log(S/K) + (r + 0.5*sigma**2)*T)/(sigma*np.sqrt(T))
