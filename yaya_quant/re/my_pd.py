@@ -138,10 +138,7 @@ def parallel_group(df, func, n_core=12, sort_by='code'):
 def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=12):
     df = copy.deepcopy(df)
 # inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
+    df = df.reset_index().sort_values(by='code').set_index(['code', 'date']).sort_index(level=['code', 'date'])
     new_col = cal + '_' + func_name + '_' + str(period)
     if parallel:
         def func(df):
@@ -189,10 +186,8 @@ def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=1
             df[new_col] =  np.exp(df.groupby('code', sort=False)['returns'].rolling(period, min_periods=1).std().values * np.sqrt(252))-1
 
 # 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code'])
+    df = df.reset_index().sort_values(by='date').set_index(['date', 'code'])
+    #df = df.sort_index(level=['date','code'])
     return df
 
 # 计算字段相较于上n个bar的收益率
