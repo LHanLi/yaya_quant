@@ -3,6 +3,9 @@ from numpy_ext import rolling_apply
 import datetime
 import pandas as pd
 
+# 时间前开后闭
+
+
 enddate = str(datetime.datetime.today().date())
 
 # 提取股票数据，开始到结束日期  ‘2020-1-1’  ‘2021-1-1’
@@ -14,13 +17,13 @@ def stocks(start, end=enddate):
     # 从DB读取数据
     engine = create_engine("mysql+pymysql://root:a23187@localhost:3306/stock")
     sql = "SELECT date,code,close,high,open,low,volume,total,free_circulation \
-            FROM daily WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start), str(end))
+            FROM daily WHERE `date` > '%s' AND `date` <= '%s'"%(str(start), str(end))
     daily = pd.read_sql(sql, engine)
     sql = "SELECT date,code,industry_code,special_type \
-            FROM tradecode WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start), str(end))
+            FROM tradecode WHERE `date` > '%s' AND `date` <= '%s'"%(str(start), str(end))
     tradecode = pd.read_sql(sql, engine)
     sql = "SELECT date,code,ex_factor \
-            FROM exfactor WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start), str(end))
+            FROM exfactor WHERE `date` > '%s' AND `date` <= '%s'"%(str(start), str(end))
     exfactor = pd.read_sql(sql, engine)
     # sql提取完毕
     print('sql success')
@@ -53,7 +56,7 @@ def connect_holding(start, end=enddate):
     # 数据库中日期为 字符串格式 '2023-05-22'
     engine = create_engine("mysql+pymysql://root:a23187@localhost:3306/stock")
     sql = "SELECT date,code,connect_holding \
-        FROM connect_holding WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
+        FROM connect_holding WHERE `date` > '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
     df_connect_holding = pd.read_sql(sql, engine)
 
 
@@ -67,7 +70,7 @@ def convertible(start, end=enddate):
     engine = create_engine("mysql+pymysql://root:a23187@localhost:3306/convertible")
     sql = "SELECT date,code,close,high,open,low,vol,conversion, pure_bond, balance, ytm, dur, \
     convexity, credit, init_credit, fund_ratio, fund_num, concentration, stock_code \
-        FROM daily WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
+        FROM daily WHERE `date` > '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
     df_convertible = pd.read_sql(sql, engine)
 # 日期从字符转化为timestamp，方便检索
     df_convertible['date'] = df_convertible['date'].apply(lambda x: pd.to_datetime(x))
@@ -85,7 +88,7 @@ def convertible_announce(start, end=enddate):
     engine = create_engine("mysql+pymysql://root:a23187@localhost:3306/convertible")
 # 公告
     sql = "SELECT time,code,abstract FROM announcements \
-        WHERE `time` >= '%s' AND `time` <= '%s'"%(str(start),str(end))
+        WHERE `time` > '%s' AND `time` <= '%s'"%(str(start),str(end))
 
     df_announcements = pd.read_sql(sql, engine)
     return df_announcements
@@ -100,12 +103,12 @@ def index(start, end=enddate):
 # 数据库中日期为 字符串格式 '2023-05-22'
     engine = create_engine("mysql+pymysql://root:a23187@localhost:3306/mindex")
     sql = "SELECT date,code,close,high,open,low,amount, totalCapital, floatCapital \
-        FROM broadindex WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
+        FROM broadindex WHERE `date` > '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
     index = pd.read_sql(sql, engine)
     # 板块指数
     #index1 = pd.read_sql_table('blockindex', engine, columns=['date','code','close','high','open','low','amount', 'totalCapital', 'floatCapital'])
     sql = "SELECT date,code,close,high,open,low,amount, totalCapital, floatCapital \
-        FROM blockindex WHERE `date` >= '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
+        FROM blockindex WHERE `date` > '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
     index1 = pd.read_sql(sql, engine)
     # 全部指数
     index = pd.concat([index, index1])
