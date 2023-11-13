@@ -11,8 +11,8 @@ from yaya_quant.re import my_io
 #THS_iFinDLogin('zsqh517','zhiyuan91242')
 #THS_iFinDLogin('zsqh588','282092')
 # 正式账号
-#THS_iFinDLogin('zsqh256', '357411')
-#THS_iFinDLogin('zsqh226','zsqh1188')
+#THS_iFinDLogin('zsqh256', '357411')   nsy
+#THS_iFinDLogin('zsqh226','zsqh1188')  zzq
 
 
 # 是否为交易日   格式为  '2023-05-10'
