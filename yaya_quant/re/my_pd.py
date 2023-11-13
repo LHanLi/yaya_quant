@@ -205,25 +205,25 @@ def cal_diff(df, cal='close', n=1):
     result = df[cal] - prevalue
     return result
 
-# 收盘价计算年化波动率  过去n bar数据
-def cal_HV(df, n=20):
-    df = copy.deepcopy(df)
-    # inde必须为 'code'和'date'，并且code内部的date排序
-    df = df.reset_index()
-    df = df.sort_values(by='code')
-    df = df.set_index(['code','date'])
-    df = df.sort_index(level=['code','date'])
-    # 计算每日对数收益率   shift会自动在二级index中shift
-    df['returns'] = (df['close']/(df['close'].groupby('code').shift())).apply(lambda x: np.log(x))
-# 计算对数收益率波动率
-    name = 'HV_' + str(n)
-    df[name] =  df.groupby('code', sort=False).rolling(n, min_periods=1)['returns'].std().values * np.sqrt(252)
-# 将index变回 date code
-    df = df.reset_index()
-    df = df.sort_values(by='date')
-    df = df.set_index(['date','code'])
-    df = df.sort_index(level=['date','code']) 
-    return df.drop('returns', axis=1)
+## 收盘价计算年化波动率  过去n bar数据
+#def cal_HV(df, n=20, price='close'):
+#    df = copy.deepcopy(df)
+#    # inde必须为 'code'和'date'，并且code内部的date排序
+#    df = df.reset_index()
+#    df = df.sort_values(by='code')
+#    df = df.set_index(['code','date'])
+#    df = df.sort_index(level=['code','date'])
+#    # 计算每日对数收益率   shift会自动在二级index中shift
+#    df['returns'] = (df[price]/(df[price].groupby('code').shift())).apply(lambda x: np.log(x))
+## 计算对数收益率波动率
+#    name = 'HV_' + str(n)
+#    df[name] =  df.groupby('code', sort=False).rolling(n, min_periods=1)['returns'].std().values * np.sqrt(252)
+## 将index变回 date code
+#    df = df.reset_index()
+#    df = df.sort_values(by='date')
+#    df = df.set_index(['date','code'])
+#    df = df.sort_index(level=['date','code']) 
+#    return df.drop('returns', axis=1)
 
 # 获得df中x_name列为自变量 y_name列为因变量的线性回归结果 
 def cal_reg(df, x_name, y_name, n, parallel=False, n_core=12):
