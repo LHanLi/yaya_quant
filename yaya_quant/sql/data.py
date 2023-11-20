@@ -244,7 +244,7 @@ def query_etf(today, kind):
     return df.rename(columns = {'time':'date', 'thscode':'code','adjustmentFactorBackward1':'exfactor'})
 
 
-def query_stock(query_date):
+def get_stock(query_date):
     # 获取股票池
     temp = THS_DP('block','%s;001005010'%query_date,'date:Y,thscode:Y')
     tuishi = THS_DP('block','最新;001005334011','date:Y,thscode:Y')
