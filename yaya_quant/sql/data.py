@@ -243,6 +243,46 @@ def query_etf(today, kind):
     df = temp.data
     return df.rename(columns = {'time':'date', 'thscode':'code','adjustmentFactorBackward1':'exfactor'})
 
+
+def query_stock(query_date):
+    # 获取股票池
+    temp = THS_DP('block','%s;001005010'%query_date,'date:Y,thscode:Y')
+    tuishi = THS_DP('block','最新;001005334011','date:Y,thscode:Y')
+    # 获取基础数据
+    query_codes = "".join([i+',' for i in temp.data['THSCODE']])
+    tuishi_codes = "".join([i+',' for i in tuishi.data['THSCODE']])[:-1]
+    query_codes = query_codes + tuishi_codes
+    # 获取基础数据
+    query_str = 'ths_stock_short_name_quote_client_stock;ths_open_price_stock;ths_high_price_stock;ths_low_stock;ths_close_price_stock;ths_vol_btin_stock;ths_margin_trading_balance_stock;ths_af_stock;ths_total_float_shares_stock;ths_free_float_shares_stock;ths_total_shares_stock'
+    query_strdate = '%s;%s,100,2000-01-01;%s,100,2000-01-01;%s,100,2000-01-01;%s,100,2000-01-01;%s,100;%s;%s;%s;%s;%s'%(query_date, \
+                    query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date)
+    temp = THS_BD(query_codes, query_str, query_strdate)
+    df = temp.data.rename(columns={'thscode':'code', 'ths_stock_short_name_quote_client_stock':'name', 'ths_open_price_stock':'open',\
+                            'ths_high_price_stock':'high', 'ths_low_stock':'low', 'ths_close_price_stock':'close',\
+                        'ths_af_stock':'ex_factor',  'ths_margin_trading_balance_stock':'margin_trading',\
+            'ths_total_float_shares_stock':'float_shares', 'ths_vol_btin_stock':'vol', \
+                'ths_free_float_shares_stock':'free_float_shares', 'ths_total_shares_stock':'total_shares'})
+    df = df.dropna(subset=['close'])
+    df['date'] = query_date
+    df['insert_time'] = datetime.datetime.now()
+    df = df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
+        'float_shares', 'total_shares', 'margin_trading', 'insert_time']]
+    return df
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # 米筐数据
 #rq.init('13645719609', '123456')
 
