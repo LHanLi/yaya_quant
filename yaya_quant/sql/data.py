@@ -244,30 +244,29 @@ def query_etf(today, kind):
     return df.rename(columns = {'time':'date', 'thscode':'code','adjustmentFactorBackward1':'exfactor'})
 
 
-def get_stock(query_date):
+def query_stock(query_date):
     # 获取股票池
     temp = THS_DP('block','%s;001005010'%query_date,'date:Y,thscode:Y')
     tuishi = THS_DP('block','最新;001005334011','date:Y,thscode:Y')
-    # 获取基础数据
     query_codes = "".join([i+',' for i in temp.data['THSCODE']])
     tuishi_codes = "".join([i+',' for i in tuishi.data['THSCODE']])[:-1]
     query_codes = query_codes + tuishi_codes
+    # 获取行情数据
+    HQ = THS_HQ(query_codes,'open,high,low,close,volume,totalShares','',query_date,query_date).data.rename(columns={'time':'date',\
+            'thscode':'code', 'totalShares':'total_shares', 'volume':'vol'})
+    # 存在的股票
+    query_codes2 = "".join([i + ',' for i in HQ['code']])[:-1]
     # 获取基础数据
-    query_str = 'ths_stock_short_name_quote_client_stock;ths_open_price_stock;ths_high_price_stock;ths_low_stock;ths_close_price_stock;ths_vol_btin_stock;ths_margin_trading_balance_stock;ths_af_stock;ths_total_float_shares_stock;ths_free_float_shares_stock;ths_total_shares_stock'
-    query_strdate = '%s;%s,100,2000-01-01;%s,100,2000-01-01;%s,100,2000-01-01;%s,100,2000-01-01;%s,100;%s;%s;%s;%s;%s'%(query_date, \
-                    query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date,query_date)
-    temp = THS_BD(query_codes, query_str, query_strdate)
-    df = temp.data.rename(columns={'thscode':'code', 'ths_stock_short_name_quote_client_stock':'name', 'ths_open_price_stock':'open',\
-                            'ths_high_price_stock':'high', 'ths_low_stock':'low', 'ths_close_price_stock':'close',\
+    query_str = 'ths_stock_short_name_quote_client_stock;ths_margin_trading_balance_stock;ths_af_stock;ths_total_float_shares_stock;ths_free_float_shares_stock;ths_total_shares_stock'
+    query_strdate = '%s;%s;%s;%s;%s;%s'%(query_date, query_date,query_date,query_date,query_date,query_date)
+    temp = THS_BD(query_codes2, query_str, query_strdate)
+    BD = temp.data.rename(columns={'thscode':'code', 'ths_stock_short_name_quote_client_stock':'name',\
                         'ths_af_stock':'ex_factor',  'ths_margin_trading_balance_stock':'margin_trading',\
-            'ths_total_float_shares_stock':'float_shares', 'ths_vol_btin_stock':'vol', \
-                'ths_free_float_shares_stock':'free_float_shares', 'ths_total_shares_stock':'total_shares'})
-    df = df.dropna(subset=['close'])
-    df['date'] = query_date
-    df['insert_time'] = datetime.datetime.now()
-    df = df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
-        'float_shares', 'total_shares', 'margin_trading', 'insert_time']]
-    return df
+            'ths_total_float_shares_stock':'float_shares', \
+                'ths_free_float_shares_stock':'free_float_shares'})
+    df = HQ.merge(BD, on='code')
+    return df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
+            'float_shares', 'total_shares', 'margin_trading']]
 
 
 
@@ -297,34 +296,34 @@ def getRQcode(code):
     code = code.replace('SZ','XSHE')
     return code
 
-# 获取当日股票数据  复权信息， 行业、状态， 行情
-def query_stock(today):
-# 获得在交易A股所有股票代码，行业分类，特殊状态（ST）
-    tradecode = rq.all_instruments(type='CS', market='cn', date=today)[['order_book_id','industry_code','special_type']]
-    tradecode = tradecode.rename(columns={'order_book_id':'code'})
-    tradecode['date'] = today
-# 将tradecode中code转化为通用命名方式
-    secu = list(tradecode['code'])
-# 行情数据 高开低手 成交量  流通股本 总股本
-    tradecode['code'] = tradecode['code'].apply(normRQcode)
-    # 结束是tomorrow才能获得当日数据
-#    tomorrow = str((pd.to_datetime(today) + datetime.timedelta(1)).date())
-    price = rq.get_price(secu, start_date=today, end_date=today,
-                      fields=['close', 'high', 'open', 'low', 'volume'],
-                      adjust_type='none')
-    shares = rq.get_shares(secu, start_date=today, end_date=today,
-                      fields=['total', 'free_circulation']) 
-    stock = price.merge(shares, on=['date','order_book_id'])
-    stock = stock.reset_index().rename(columns = {'order_book_id':'code'})
-    stock['code'] = stock['code'].apply(normRQcode)
-    # 复权因子 (对应每只股票的每个除权除息日)
-    exfactor = rq.get_ex_factor(secu, start_date=today, end_date=today)
-    if type(exfactor) != type(None):
-        exfactor = exfactor.reset_index()
-        exfactor['code'] = exfactor['order_book_id'].apply(normRQcode)
-        exfactor = exfactor.rename(columns = {'ex_date':'date'})
-        exfactor = exfactor[['date','code','ex_factor']]
-    return tradecode, stock, exfactor
+## 获取当日股票数据  复权信息， 行业、状态， 行情
+#def query_stock(today):
+## 获得在交易A股所有股票代码，行业分类，特殊状态（ST）
+#    tradecode = rq.all_instruments(type='CS', market='cn', date=today)[['order_book_id','industry_code','special_type']]
+#    tradecode = tradecode.rename(columns={'order_book_id':'code'})
+#    tradecode['date'] = today
+## 将tradecode中code转化为通用命名方式
+#    secu = list(tradecode['code'])
+## 行情数据 高开低手 成交量  流通股本 总股本
+#    tradecode['code'] = tradecode['code'].apply(normRQcode)
+#    # 结束是tomorrow才能获得当日数据
+##    tomorrow = str((pd.to_datetime(today) + datetime.timedelta(1)).date())
+#    price = rq.get_price(secu, start_date=today, end_date=today,
+#                      fields=['close', 'high', 'open', 'low', 'volume'],
+#                      adjust_type='none')
+#    shares = rq.get_shares(secu, start_date=today, end_date=today,
+#                      fields=['total', 'free_circulation']) 
+#    stock = price.merge(shares, on=['date','order_book_id'])
+#    stock = stock.reset_index().rename(columns = {'order_book_id':'code'})
+#    stock['code'] = stock['code'].apply(normRQcode)
+#    # 复权因子 (对应每只股票的每个除权除息日)
+#    exfactor = rq.get_ex_factor(secu, start_date=today, end_date=today)
+#    if type(exfactor) != type(None):
+#        exfactor = exfactor.reset_index()
+#        exfactor['code'] = exfactor['order_book_id'].apply(normRQcode)
+#        exfactor = exfactor.rename(columns = {'ex_date':'date'})
+#        exfactor = exfactor[['date','code','ex_factor']]
+#    return tradecode, stock, exfactor
 
 
 
