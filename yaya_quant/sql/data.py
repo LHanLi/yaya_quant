@@ -274,9 +274,10 @@ def query_stock(query_date):
     return df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
             'float_shares', 'total_shares', 'margin_trading']]
 
-
-
-
+def query_stock_min(query_date, query_codes):
+    temp = THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original,Interval:5',\
+              '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data
+    return temp.rename(columns={'time':'date', 'thscode':'code', 'volume':'vol'})
 
 
 
