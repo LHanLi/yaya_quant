@@ -111,10 +111,17 @@ def query_convert(today):
     return df
 
 # 获取转债分钟线
-def query_CB_min(query_date, query_codes):
-    temp = THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original',\
-        '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data
-    return temp.rename(columns={'time':'date', 'thscode':'code', 'volume':'vol'})
+def query_CB_min(query_date, codes):
+    # 单次查询数据量限制在200w以内，需要分批次查询
+    split_codes = [codes[i:i+300] for i in range(0, len(codes), 300)]
+    #len(sum(split_codes, []))
+    query_codes_list = ["".join([i+',' for i in codes])[:-1] for codes in split_codes]
+    result = [THS_HF(query_codes,'open;high;low;close;volume;amount,sellVolume;buyVolume','Fill:Original',\
+                '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
+                    columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
+    #temp = THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original',\
+    #    '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data
+    return pd.concat(result)
 
 # 查询日期（如果存在截止日期则为开始日期）， 查询代码
 # 获取转债与可交换债数据     today  首先保证为交易日               
@@ -274,17 +281,15 @@ def query_stock(query_date):
     return df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
             'float_shares', 'total_shares', 'margin_trading']]
 
-def query_stock_min(query_date, query_codes):
-    temp = THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original,Interval:5',\
-              '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data
-    return temp.rename(columns={'time':'date', 'thscode':'code', 'volume':'vol'})
-
-
-
-
-
-
-
+def query_stock_min(query_date, codes):
+    # 单次查询数据量限制在200w以内，需要分批次查询
+    split_codes = [codes[i:i+300] for i in range(0, len(codes), 300)]
+    #len(sum(split_codes, []))
+    query_codes_list = ["".join([i+',' for i in codes])[:-1] for codes in split_codes]
+    result = [THS_HF(query_codes,'open;high;low;close;volume;amount,sellVolume;buyVolume','Fill:Original',\
+                '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
+                    columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
+    return pd.concat(result)
 
 
 
