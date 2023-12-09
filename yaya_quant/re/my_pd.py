@@ -131,15 +131,18 @@ def parallel_group(df, func, n_core=12, sort_by='code'):
 # 行情数据的常用计算
 # 数据格式为 mutiindex (date,code)   close...
 
-# 计算时间序列值
+# 计算时间序列数据
 # 数据df，函数名(Max, Min, Skew, Kurt, MA, Std)
-# 作用字段，滚动时间窗口长度，是否并行，并行核数
+# 作用字段，滚动时间窗口长度，新增数据列名，是否并行，并行核数
 # rolling输入series而不是df速度会明显提升
-def cal_TS(df, func_name='Max', cal='close', period=20, parallel=False, n_core=12):
+def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=False, n_core=12):
     df = copy.deepcopy(df)
 # inde必须为 'code'和'date'，并且code内部的date排序
     df = df.reset_index().sort_values(by='code').set_index(['code', 'date']).sort_index(level=['code', 'date'])
-    new_col = cal + '_' + func_name + '_' + str(period)
+    if colname==None:
+        new_col = cal + '_' + func_name + '_' + str(period)
+    else:
+        new_col = colname
     if parallel:
         def func(df):
             if func_name=='Max':

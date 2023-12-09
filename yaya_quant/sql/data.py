@@ -265,24 +265,24 @@ def query_stock(query_date):
     tuishi_codes = "".join([i+',' for i in tuishi.data['THSCODE']])[:-1]
     query_codes = query_codes + tuishi_codes
     # 获取行情数据
-    HQ = THS_HQ(query_codes,'open,high,low,close,volume,totalShares','',query_date,query_date).data.rename(columns={'time':'date',\
-            'thscode':'code', 'totalShares':'total_shares', 'volume':'vol'})
+    HQ = THS_HQ(query_codes,'open,high,low,close,volume,amount,transactionAmount,totalShares,floatSharesOfAShares',\
+                '',query_date,query_date).data.rename(columns={'time':'date',\
+            'thscode':'code', 'totalShares':'total_shares', 'volume':'vol', 'transactionAmount':'deal_times',\
+                 'floatSharesOfAShares':'float_shares'})
     # 存在的股票
     query_codes2 = "".join([i + ',' for i in HQ['code']])[:-1]
     # 获取基础数据
-    query_str = 'ths_stock_short_name_quote_client_stock;ths_margin_trading_balance_stock;ths_af_stock;ths_total_float_shares_stock;ths_free_float_shares_stock;ths_total_shares_stock'
-    query_strdate = '%s;%s;%s;%s;%s;%s'%(query_date, query_date,query_date,query_date,query_date,query_date)
+    query_str = 'ths_stock_short_name_quote_client_stock;ths_af_stock;ths_free_float_shares_stock'
+    query_strdate = '%s;%s;%s'%(query_date,query_date,query_date)
     temp = THS_BD(query_codes2, query_str, query_strdate)
     BD = temp.data.rename(columns={'thscode':'code', 'ths_stock_short_name_quote_client_stock':'name',\
-                        'ths_af_stock':'ex_factor',  'ths_margin_trading_balance_stock':'margin_trading',\
-            'ths_total_float_shares_stock':'float_shares', \
+                        'ths_af_stock':'ex_factor',\
                 'ths_free_float_shares_stock':'free_float_shares'})
     df = HQ.merge(BD, on='code')
-    return df[['date', 'code', 'name', 'open', 'high', 'low', 'close', 'vol', 'ex_factor', 'free_float_shares', \
-            'float_shares', 'total_shares', 'margin_trading']]
+    return df
 
 def query_stock_min(query_date, codes):
-    # 单次查询数据量限制在200w以内，需要分批次查询
+    # 单次查询数据量限制在200w以内，需要分批次查询,每次300只股票
     split_codes = [codes[i:i+300] for i in range(0, len(codes), 300)]
     #len(sum(split_codes, []))
     query_codes_list = ["".join([i+',' for i in codes])[:-1] for codes in split_codes]
@@ -290,6 +290,52 @@ def query_stock_min(query_date, codes):
                 '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
                     columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
     return pd.concat(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
