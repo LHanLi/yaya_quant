@@ -69,7 +69,8 @@ def query_convert(today):
     # 去掉最后一个,
     codequery = codequery[:-1]
 # 行情信息 开高低收 vol   自动略过退市转债
-    HQ = THS_HQ(codequery,'open,high,low,close,volume','PriceType:1',today,today).data
+    HQ = THS_HQ(codequery,'open,high,low,close,volume,amount,yieldMaturity,remainingTerm,maxwellDuration,modifiedDuration,convexity',\
+                'PriceType:1',today,today).data
     # codequery2不含退市转债，节约数据量
     codequery2 = ''
     i = 0
@@ -79,32 +80,25 @@ def query_convert(today):
         i += 10
     codequery2 = codequery2[:-1]
     # 行情获取不到的代码表示当时该转债不存在，则不进行继续（！！！非常重要，如果继续查询计算数据量！！！）
-# 基本信息  转股价 纯债价值 债券余额 对应正股代码
-#    BD = THS_BD(codequery,'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_stock_code_cbond',
-#       today+';'+today+';'+today+';').data
 # 基本信息  
 # 转股价 纯债价值 债券余额 对应正股代码
 # 到期收益率  久期   凸性  信用评级  发行信用评级
 # 基金持有占比  基金家数  前十大持有人占比 
-#    BD = THS_BD(codequery,'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_stock_code_cbond;ths_ytm_bond;ths_dur_bond;ths_convexity_bond;ths_specified_date_bond_rating_bond;ths_issue_credit_rating_bond;ths_fundholdratio_of_positionamt_bond;ths_held_fund_corp_num_bond;ths_holder_held_ratio_cbond',
-#       today+';'+today+';'+today+';').data
-#    BD = THS_BD(codequery,
-#'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_stock_code_cbond;ths_ytm_bond;ths_dur_bond;ths_convexity_bond;ths_specified_date_bond_rating_bond;ths_issue_credit_rating_bond;ths_fundholdratio_of_positionamt_bond;ths_held_fund_corp_num_bond;ths_holder_held_ratio_cbond',
-#   today+';'+today+';'+today+';'+today+',100;'+today+';'+today+';'+today+',100;;104;104;'+today+';'+today+',1').data
+#    BD = THS_BD(codequery2,
+#'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_stock_code_cbond;ths_pure_bond_ytm_cbond;ths_dur_bond;ths_convexity_bond;ths_specified_date_bond_rating_bond;ths_issue_credit_rating_bond;ths_fundholdratio_of_positionamt_bond;ths_held_fund_corp_num_bond;ths_holder_held_ratio_cbond',
+#   today+';'+today+';'+today+';;'+today+';'+today+';'+today+';'+today+',100;;104;104;'+today+',1').data
     BD = THS_BD(codequery2,
-'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_stock_code_cbond;ths_pure_bond_ytm_cbond;ths_dur_bond;ths_convexity_bond;ths_specified_date_bond_rating_bond;ths_issue_credit_rating_bond;ths_fundholdratio_of_positionamt_bond;ths_held_fund_corp_num_bond;ths_holder_held_ratio_cbond',
-   today+';'+today+';'+today+';;'+today+';'+today+';'+today+';'+today+',100;;104;104;'+today+',1').data
+    'ths_conversion_price_cbond;ths_pure_bond_value_cbond;ths_bond_balance_bond;ths_specified_date_bond_rating_bond;ths_holder_held_ratio_cbond',\
+        today+';'+today+';'+today+';'+today+',100;'+today+',1').data
 # 最终结果df
     df = HQ.merge(BD, on='thscode')
 #    df = df.rename(columns={'time':'date','thscode':'code','volume':'vol',
 #                       'ths_conversion_price_cbond':'conversion','ths_pure_bond_value_cbond':'pure_bond',
 #                      'ths_bond_balance_bond':'balance','ths_stock_code_cbond':'stock_code'})
-    df = df.rename(columns={'time':'date','thscode':'code','volume':'vol',
-                       'ths_conversion_price_cbond':'conversion','ths_pure_bond_value_cbond':'pure_bond',
-                      'ths_bond_balance_bond':'balance','ths_stock_code_cbond':'stock_code',
-                      'ths_pure_bond_ytm_cbond':'ytm', 'ths_dur_bond':'dur', 'ths_convexity_bond':'convexity',
-                      'ths_specified_date_bond_rating_bond':'credit','ths_issue_credit_rating_bond':'init_credit',
-                      'ths_fundholdratio_of_positionamt_bond':'fund_ratio','ths_held_fund_corp_num_bond':'fund_num',
+    df = df.rename(columns={'time':'date','thscode':'code','volume':'vol', 'yieldMaturity':'ytm', \
+                            'remainingTerm':'Dur', 'maxwellDuration':'mwDur', 'modifiedDuration':'mDur',\
+                       'ths_conversion_price_cbond':'conversion','ths_pure_bond_value_cbond':'pure_bond',\
+                      'ths_bond_balance_bond':'balance', 'ths_specified_date_bond_rating_bond':'credit',\
                       'ths_holder_held_ratio_cbond':'concentration'})
 # to_sql方法无法处理mutiindex
 #    df = df.set_index(['date','code'])
