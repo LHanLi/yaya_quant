@@ -112,17 +112,17 @@ def rolling_reg(df, x_name, y_name, n):
     result = pd.DataFrame(result, index=df.index)
     return result
 
-# 并行计算   可以保留顺序
+# 并行计算df, func为对df/ser的操作,返回df/ser 可以保留顺序
 def parallel(df, func, n_core=12):
     from joblib import Parallel, delayed
     len_df = len(df)
     sp = list(range(len_df)[::int(len_df/n_core+0.5)])[:-1] # 最后一个节点改为末尾
     sp.append(len_df)
     slc_gen = (slice(*idx) for idx in zip(sp[:-1],sp[1:]))
-
     results = Parallel(n_jobs=n_core)(delayed(func)(df[slc]) for slc in slc_gen)
     return pd.concat(results)
 
+# 并行group
 def parallel_group(df, func, n_core=12, sort_by='code'):
     from joblib import Parallel, delayed
     results = Parallel(n_jobs=n_core)(delayed(func)(group) for name, group in df.groupby(sort_by))
