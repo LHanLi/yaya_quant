@@ -73,7 +73,7 @@ def convertible(start, end=enddate):
         FROM daily WHERE `date` > '%s' AND `date` <= '%s'"%(str(start.date()), str(end.date()))
     df_convertible = pd.read_sql(sql, engine)
 # 日期从字符转化为timestamp，方便检索
-    df_convertible['date'] = df_convertible['date'].apply(lambda x: pd.to_datetime(x))
+    df_convertible['date'] = pd.to_datetime(df_convertible['date'])
     df_convertible = df_convertible.sort_values(by='date')
     df_convertible = df_convertible.set_index(['date','code'])
     return df_convertible
