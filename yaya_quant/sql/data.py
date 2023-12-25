@@ -123,12 +123,13 @@ def query_CB_min(query_date, codes):
     result = [THS_HF(query_codes,'open;high;low;close;volume;amount,sellVolume;buyVolume','Fill:Original',\
                 '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
                     columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
-    ##result = [THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original',\
-    ##            '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
-    ##                columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
+    #result = [THS_HF(query_codes,'open;high;low;close;volume;amount','Fill:Original',\
+    #            '%s 09:15:00'%query_date,'%s 15:15:00'%query_date).data.rename(\
+    #                columns={'time':'date', 'thscode':'code', 'volume':'vol'}) for query_codes in query_codes_list]
     # 深市单位是张，沪市单位是手，全部统一为张
+    result = pd.concat(result)
     result['vol'] = result.apply(lambda x: x['vol'] if x['code'][-2:]=='SZ' else 10*x['vol'], axis=1)
-    return pd.concat(result)
+    return result
 
 # 查询日期（如果存在截止日期则为开始日期）， 查询代码
 # 获取转债与可交换债数据     today  首先保证为交易日               
