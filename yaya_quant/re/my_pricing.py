@@ -71,8 +71,8 @@ def Vega(S, K, T, sigma, r=0.03, option='call'):
 
 # 隐含波动率（可以为负值）,  P 期权价格
 def IV(P,S,K,T,r=0.03, option='call'):      #从0.001 - 1.000进行二分查找
-    sigma_min = 0           # 设定波动率初始最小值
-    sigma_max = 100           # 设定波动率初始最大值
+    sigma_min = 1e-5           # 设定波动率初始最小值
+    sigma_max = 1e5           # 设定波动率初始最大值
 #    sigma_mid = (sigma_min + sigma_max) / 2
     V_min = BSM(S, K, T, sigma_min, r, option)
     V_max = BSM(S, K, T, sigma_max, r, option)
