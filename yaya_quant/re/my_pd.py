@@ -112,6 +112,23 @@ def rolling_reg(df, x_name, y_name, n):
     result = pd.DataFrame(result, index=df.index)
     return result
 
+def rolling_corr(df, x_name, y_name, n):
+    # 如果这一字段的df长度小于n，直接返回nan,对应index
+    if df.shape[0]<n:
+        result_nan = np.ones(df.shape[0])*np.nan
+        result = pd.Series(result_nan, df.index)
+        return result
+    # 相关性的x和y
+    x = df[x_name]
+    y = df[y_name]
+    def func(x, y):
+        r = x.corr(y)
+        return r 
+    result = rolling_apply(func, n, x, y)
+# 添加index
+    result = pd.DataFrame(result, index=df.index)
+    return result
+
 # 并行计算df, func为对df/ser的操作,返回df/ser 可以保留顺序
 def parallel(df, func, n_core=12):
     from joblib import Parallel, delayed
@@ -133,6 +150,7 @@ def parallel_group(df, func, n_core=12, sort_by='code'):
 
 # 计算时间序列数据
 # 数据df，函数名(Max, Min, Skew, Kurt, MA, Std)
+# 求相关系数时cal命名方式为"cal1,cal2"
 # 作用字段，滚动时间窗口长度，新增数据列名，是否并行，并行核数
 # rolling输入series而不是df速度会明显提升
 def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=False, n_core=12):
@@ -144,6 +162,7 @@ def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=F
     else:
         new_col = colname
     if parallel:
+        # 这里的函数返回df
         def func(df):
             if func_name=='Max':
                 return df[cal].rolling(period, min_periods=1).max()
@@ -164,8 +183,15 @@ def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=F
             elif func_name=='HV':
                 returns = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
                 return np.exp(returns.rolling(period, min_periods=1).std() * np.sqrt(252))-1
+            elif func_name=='argmax':
+                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).apply(np.argmax)+1
+            elif func_name=='argmin':
+                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).apply(np.argmin)+1
+            elif func_name=='rank':
+                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).rank()
         df[new_col] =  parallel_group(df, func, n_core=n_core).values
     else:
+        # 这里=后的函数返回.values
         if func_name=='Max':
             df[new_col] =  df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).max().values
         elif func_name=='Min':
@@ -187,10 +213,15 @@ def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=F
         elif func_name=='HV':
             df['returns'] = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
             df[new_col] =  np.exp(df.groupby('code', sort=False)['returns'].rolling(period, min_periods=1).std().values * np.sqrt(252))-1
+        elif func_name=='argmax':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].apply(np.argmax).values+1
+        elif func_name=='argmin':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].apply(np.argmin).values+1
+        elif func_name=='rank':
+            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].rank().values
 
 # 将index变回 date code
     df = df.reset_index().sort_values(by='date').set_index(['date', 'code'])
-    #df = df.sort_index(level=['date','code'])
     return df
 
 # 计算字段相较于上n个bar的收益率
@@ -253,7 +284,31 @@ def cal_reg(df, x_name, y_name, n, parallel=False, n_core=12):
     df = df.sort_values(by='date')
     df = df.set_index(['date','code'])
     df = df.sort_index(level=['date','code']) 
+    return df
 
+def cal_corr(df, x_name, y_name, n, parallel=False, n_core=12):
+    df = copy.deepcopy(df)
+    # inde必须为 'code'和'date'，并且code内部的date排序
+    df = df.reset_index()
+    df = df.sort_values(by='code')
+    df = df.set_index(['code','date'])
+    df = df.sort_index(level=['code','date'])
+    # 命名规则
+    name_r = x_name + '-' + y_name + '--r'+str(n)
+    if parallel:
+        def func(df):
+            return rolling_corr(df.reset_index('code'), x_name, y_name, n)
+        df[[name_r]] =  parallel_group(df, func, n_core=n_core).values
+    else:
+        # 回归    去掉二级index中的code
+        df_reg = df.groupby('code', sort=False).apply(lambda df: \
+                        rolling_corr(df.reset_index('code'), x_name, y_name, n))
+        df[[name_r]] = df_reg
+    # 将index变回 date code
+    df = df.reset_index()
+    df = df.sort_values(by='date')
+    df = df.set_index(['date','code'])
+    df = df.sort_index(level=['date','code']) 
     return df
 
 def cal_CrossReg(df_, x_name, y_name, series=False):
