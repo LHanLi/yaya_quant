@@ -219,26 +219,76 @@ def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=F
             df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].apply(np.argmin).values+1
         elif func_name=='rank':
             df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].rank().values
-
 # 将index变回 date code
     df = df.reset_index().sort_values(by='date').set_index(['date', 'code'])
     return df
 
-# 计算字段相较于上n个bar的收益率
-def cal_return(df, cal='close', n=1, log=False):
-    prevalue = df.groupby('code', sort=False).shift(n)[cal]
-    if log:
-        result = np.log(df[cal]/prevalue)
-    else:
-        result = df[cal]/prevalue - 1
-    return result
+# 返回series
+# 有并行选项的函数默认并行
+def cal_ts(df, func_name='Max', cal='close', period=20, parallel=True, n_core=12):
+    if func_name=='MA':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).mean()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Max':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).max()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Min':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).min()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Std':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).std()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Skew':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).skew()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Kurt':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).kurt()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Sum':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).sum()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='rank':
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).rank()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+    elif func_name=='Zscore':
+        MA = df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).mean()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+        Std = df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).std()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+        return ((df[cal]-MA)/Std).fillna(0)
+    elif func_name=='HV':
+        returns = np.log(df[cal]/df[cal].groupby(level='code').shift()).fillna(0)
+        return np.exp(returns.groupby(level='code').apply(lambda x: x.droplevel('code').rolling(\
+            period, min_periods=1).std()*np.sqrt(250)).reset_index().sort_values(\
+                by='date').set_index(['date', 'code']).loc[df.index][cal])-1
+    elif func_name in ['argmin', 'argmax']:
+        if parallel:
+            def func(df):
+                return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+                    period, min_periods=1).apply(getattr(np, func_name)))
+            result = parallel_group(df, func, n_core=n_core)
+            return result.reset_index().sort_values(by='date').set_index(['date', 'code']).loc[df.index][cal]
+        return df[cal].groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).apply(getattr(np, func_name))).reset_index().sort_values(by='date').set_index(\
+                ['date', 'code']).loc[df.index][cal]
 
-# 相较上n个bar的变化
-def cal_diff(df, cal='close', n=1):
-    prevalue = df.groupby('code', sort=False).shift(n)[cal]
-    result = df[cal] - prevalue
-    return result
 
+
+## 计算字段相较于上n个bar的收益率
+#def cal_return(df, cal='close', n=1, log=False):
+#    prevalue = df.groupby('code', sort=False).shift(n)[cal]
+#    if log:
+#        result = np.log(df[cal]/prevalue)
+#    else:
+#        result = df[cal]/prevalue - 1
+#    return result
+#
+## 相较上n个bar的变化
+#def cal_diff(df, cal='close', n=1):
+#    prevalue = df.groupby('code', sort=False).shift(n)[cal]
+#    result = df[cal] - prevalue
+#    return result
+#
 ## 收盘价计算年化波动率  过去n bar数据
 #def cal_HV(df, n=20, price='close'):
 #    df = copy.deepcopy(df)
