@@ -318,9 +318,9 @@ def cal_reg(df, x_name, y_name, n, parallel=True, n_core=12):
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
     # 命名规则
-    name_beta = x_name + '-' + y_name + '--beta' +str(n)
-    name_alpha = x_name + '-' + y_name + '--alpha'+str(n)
-    name_r = x_name + '-' + y_name + '--r'+str(n)
+    name_beta = str(x_name) + '-' + str(y_name) + '--beta' +str(n)
+    name_alpha = str(x_name) + '-' + str(y_name) + '--alpha'+str(n)
+    name_r = str(x_name) + '-' + str(y_name) + '--r'+str(n)
     if parallel:
         def func(df):
             return rolling_reg(df.reset_index('code'), x_name, y_name, n)
@@ -344,7 +344,7 @@ def cal_corr(df, x_name, y_name, n, parallel=True, n_core=12):
     df = df.set_index(['code','date'])
     df = df.sort_index(level=['code','date'])
     # 命名规则
-    name_r = x_name + '-' + y_name + '--r'+str(n)
+    name_r = str(x_name) + '-' + str(y_name) + '--r'+str(n)
     if parallel:
         def func(df):
             return rolling_corr(df.reset_index('code'), x_name, y_name, n)
@@ -363,7 +363,7 @@ def cal_corr(df, x_name, y_name, n, parallel=True, n_core=12):
 
 def cal_CrossReg(df_, x_name, y_name, series=False):
     df = copy.copy(df_)
-    name = y_name + '-' + x_name + '--alpha'
+    name = str(y_name) + '-' + str(x_name) + '--alpha'
     beta = df.groupby('date').apply(lambda x: ((x[y_name]-x[y_name].mean())*(x[x_name]-x[x_name].mean())).sum()/((x[x_name]-x[x_name].mean())**2).sum())
     gamma = df.groupby('date').apply(lambda x: x[y_name].mean() - beta[x.index[0][0]]*x[x_name].mean())
     r = df.groupby('date').apply(lambda x: np.sqrt(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum()/(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum() + ((x[y_name]-(gamma[x.index[0][0]] + x[x_name]*beta[x.index[0][0]]))**2).sum()))) 
