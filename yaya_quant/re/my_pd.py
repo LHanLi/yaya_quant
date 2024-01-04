@@ -225,7 +225,8 @@ def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=F
 
 # 输入series返回series
 # 有并行选项的函数默认并行
-def cal_ts(ser, func_name='Max', period=20, parallel=True, n_core=12):
+# a 函数可选参数
+def cal_ts(ser, func_name='Max', period=20, a=1, parallel=True, n_core=12):
     if func_name=='MA':
         return ser.groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
             period, min_periods=1).mean()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0]
@@ -249,7 +250,10 @@ def cal_ts(ser, func_name='Max', period=20, parallel=True, n_core=12):
             period, min_periods=1).sum()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0]
     elif func_name=='rank':
         return ser.groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
-            period, min_periods=1).rank()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0]
+            period, min_periods=1).rank()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0] 
+    elif func_name=='quantile':
+        return ser.groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
+            period, min_periods=1).quantile(a)).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0] 
     elif func_name=='Zscore':
         MA = ser.groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
             period, min_periods=1).mean()).reset_index().sort_values(by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0]
@@ -261,7 +265,7 @@ def cal_ts(ser, func_name='Max', period=20, parallel=True, n_core=12):
         return np.exp(returns.groupby(level='code').apply(lambda x: x.droplevel('code').rolling(\
             period, min_periods=1).std()*np.sqrt(250)).reset_index().sort_values(\
                 by='date').set_index(['date', 'code']).loc[ser.index].iloc[:,0])-1
-    elif func_name in ['argmin', 'argmax']:
+    elif func_name in ['argmin', 'argmax', 'prod']:
         if parallel:
             def func(ser):
                 return ser.groupby(level='code').apply(lambda x: x.droplevel( 'code').rolling(\
