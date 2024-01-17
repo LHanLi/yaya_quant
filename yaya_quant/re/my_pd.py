@@ -368,17 +368,51 @@ def cal_corr(df, x_name, y_name, n, parallel=True, n_core=12):
     df = df.sort_index(level=['date','code']) 
     return df
 
-def cal_CrossReg(df_, x_name, y_name, series=False):
-    df = copy.copy(df_)
-    name = str(y_name) + '-' + str(x_name) + '--alpha'
-    beta = df.groupby('date').apply(lambda x: ((x[y_name]-x[y_name].mean())*(x[x_name]-x[x_name].mean())).sum()/((x[x_name]-x[x_name].mean())**2).sum())
-    gamma = df.groupby('date').apply(lambda x: x[y_name].mean() - beta[x.index[0][0]]*x[x_name].mean())
-    r = df.groupby('date').apply(lambda x: np.sqrt(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum()/(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum() + ((x[y_name]-(gamma[x.index[0][0]] + x[x_name]*beta[x.index[0][0]]))**2).sum()))) 
+#def cal_CrossReg(df_, x_name, y_name, series=False):
+#    df = copy.copy(df_)
+#    name = str(y_name) + '-' + str(x_name) + '--alpha'
+#    beta = df.groupby('date').apply(lambda x: ((x[y_name]-x[y_name].mean())*(x[x_name]-x[x_name].mean())).sum()/((x[x_name]-x[x_name].mean())**2).sum())
+#    gamma = df.groupby('date').apply(lambda x: x[y_name].mean() - beta[x.index[0][0]]*x[x_name].mean())
+#    r = df.groupby('date').apply(lambda x: np.sqrt(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum()/(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum() + ((x[y_name]-(gamma[x.index[0][0]] + x[x_name]*beta[x.index[0][0]]))**2).sum()))) 
+#
+#    df[name] = df.groupby('date').apply(lambda x: x[y_name] - beta[x.index[0][0]]*x[x_name] - gamma[x.index[0][0]]).values
+#
+#    if series:
+#        return df, beta, gamma, r
+#    else:
+#        return df
 
-    df[name] = df.groupby('date').apply(lambda x: x[y_name] - beta[x.index[0][0]]*x[x_name] - gamma[x.index[0][0]]).values
+# x_name list, y_nmae column
+# 截面多元线性回归
+def cal_CrossReg(df, x_name, y_name, residual=False):
+    import statsmodels.api as sm
+    # 使用sm模块
+    result = df.groupby('date', sort=False).apply(lambda d: sm.OLS(d[y_name], sm.add_constant(d[x_name])).fit())
+    
+    # 如果d[x_name]中所有数相同为C且不为零，这时params中没有const，x_name为d[y_name].mean()/C
+    # rsquared为0
+    # 当d[x_name]全为0时，params['const']为0，params[x_name]为d[y_name].mean()
+    # rsquared可能为极小的负数
+    def func(x, name):
+        try:
+            return x.params[name]
+        except:
+            print('sm reg warning')
+            return 0
+    #if type(x_name)!=type([]):
+    r = result.map(lambda x: np.sqrt(abs(x.rsquared)))
 
-    if series:
-        return df, beta, gamma, r
+    data = []
+    index = []
+    for i in result.items():
+        data.append(dict(i[1].params))
+        index.append(i[0])
+    params = pd.DataFrame(data, index=index)
+
+    if residual:
+        return pd.Series(df.groupby('date').apply(lambda x: x[y_name] - \
+                    (params.loc[x.index[0][0]][x_name]*x[x_name]).sum(axis=1) -\
+                        params.loc[x.index[0][0]]['const']).values, index=df.index)
     else:
-        return df
+        return params, r
 
