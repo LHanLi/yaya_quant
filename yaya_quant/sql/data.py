@@ -241,17 +241,9 @@ def get_CB(today, enddate=None, codes=None):
 
 # 获取etf数据
 # 宽基ETF，行业ETF
-def query_etf(today, kind):
-    # 宽基etf
-    if kind == 'broad':
-        # 查询全部合约名称
-        query = today + ';051001006006001001'
-    # 行业etf
-    elif kind == 'industry':
-        query = today + ';051001006006001002'
-    # 策略etf
-    elif kind == 'strat':
-        query = today + ';051001006006001003'
+def query_etf(today):
+    # 全部ETF
+    query = today+ ';051001006'
     # code_list 
     temp = THS_DP('block',query,'date:Y,thscode:Y,security_name:Y')
     code_list = list(temp.data['THSCODE'])
@@ -260,9 +252,33 @@ def query_etf(today, kind):
         codequery += i+','
     # 去掉最后一个,
     codequery = codequery[:-1]
-    temp = THS_HQ(codequery,'open,high,low,close,volume,adjustmentFactorBackward1','',today, today)
+    temp = THS_HQ(codequery,\
+        'open,high,low,close,volume,amount,turnoverRatio,adjustmentFactorBackward1,netAssetValue',\
+            '',today, today)
     df = temp.data
-    return df.rename(columns = {'time':'date', 'thscode':'code','adjustmentFactorBackward1':'exfactor'})
+    return df.rename(columns = {'time':'date', 'thscode':'code',\
+                                'adjustmentFactorBackward1':'exfactor', 'netAssetValue':'net'}) 
+    ## 宽基etf
+    #if kind == 'broad':
+    #    # 查询全部合约名称
+    #    query = today + ';051001006006001001'
+    ## 行业etf
+    #elif kind == 'industry':
+    #    query = today + ';051001006006001002'
+    ## 策略etf
+    #elif kind == 'strat':
+    #    query = today + ';051001006006001003'
+    ## code_list 
+    #temp = THS_DP('block',query,'date:Y,thscode:Y,security_name:Y')
+    #code_list = list(temp.data['THSCODE'])
+    #codequery = ''
+    #for i in code_list:
+    #    codequery += i+','
+    ## 去掉最后一个,
+    #codequery = codequery[:-1]
+    #temp = THS_HQ(codequery,'open,high,low,close,volume,adjustmentFactorBackward1','',today, today)
+    #df = temp.data
+    #return df.rename(columns = {'time':'date', 'thscode':'code','adjustmentFactorBackward1':'exfactor'})
 
 
 def query_stock(query_date, codes=None):
