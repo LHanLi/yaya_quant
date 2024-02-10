@@ -416,15 +416,6 @@ def query_balance(year, quater, codes, tradedate):
 
 
 def query_income(year, quater, codes, tradedate):
-    # code 代码， currency 货币资金， receivable 应收账款
-    # prepays 预付账款， inventory 存货， current_asset 流动资产
-    # fixed 固定资产， building 在建工程， intangible 无形资产
-    # goodwill 商誉， deferred 长期待摊费用， asset 总资产，
-    # st_borrow 短期负债， receivable_borrow 应付账款， prepays_borrow 预收账款，
-    # payroll 应付员工工资， 1y_borrow 一年内到期非流动债务 current_borrow 流动负债， 
-    # lt_payable 长期应付款， borrow 总负债， capital_reverve 资本公积
-    # earn_reverve 盈余公积， noassigned_profit 未分配利润， equity 归母权益
-    # date 发布日期
     #query_codes = "".join([i+',' for i in \
     #    list(stocks.loc[look_date-datetime.timedelta(days=365):look_date].index.get_level_values(1).unique())])[:-1]
     query_codes = "".join([i+',' for i in codes])[:-1]
