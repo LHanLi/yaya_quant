@@ -397,7 +397,8 @@ def cal_corr(df, x_name, y_name, n, parallel=True, n_core=12):
 def cal_CrossReg(df, x_name, y_name, residual=False):
     import statsmodels.api as sm
     # 使用sm模块
-    result = df.groupby('date', sort=False).apply(lambda d: sm.OLS(d[y_name], sm.add_constant(d[x_name])).fit())
+    result = df.groupby('date', sort=False).apply(lambda d:\
+                 sm.OLS(d[y_name], sm.add_constant(d[x_name])).fit())
     
     # 如果d[x_name]中所有数相同为C且不为零，这时params中没有const，x_name为d[y_name].mean()/C
     # rsquared为0
