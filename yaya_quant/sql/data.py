@@ -22,7 +22,7 @@ def is_tradeday(today):
         return True
 
 # 获取某日市场全部转债
-def query_CBlist(today, trade=0):
+def query_CBlist(today, all=True):
 # 数据查询时的全部可交易转债
     query = today + ';031026_640007'
     temp = THS_DP('block',query,'thscode:Y,security_name:Y')
@@ -59,7 +59,7 @@ def query_CBlist(today, trade=0):
         codes11 = ()
     # 包含全部 today 时可交易转债（还包含today时已退市转债）
     codes = list(set(codes0) | set(codes01) | set(codes1) | set(codes11))
-    if trade:
+    if all:
         return codes
     # 当日可交易
     else:
@@ -68,10 +68,11 @@ def query_CBlist(today, trade=0):
         for i in codes:
             codequery += i+','
             # 去掉最后一个,
-            codequery = codequery[:-1]
+        codequery = codequery[:-1]
         #  自动略过当时未上市和退市转债
         HQ = THS_HQ(codequery,'open','PriceType:1',today,today).data
-        if HQ==None:
+        if type(HQ)==type(None):
+            print('not tradeday')
             return []
         codes = list(HQ.thscode.values)
         return codes
