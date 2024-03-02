@@ -2,7 +2,7 @@ from iFinDPy import *
 # datetime 需要在 import iFinDPy 后
 import datetime
 import pandas as pd
-import rqdatac as rq
+#import rqdatac as rq
 from yaya_quant.re import my_io
 
 
