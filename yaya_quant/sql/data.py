@@ -397,7 +397,7 @@ def query_stock_min(query_date, codes):
 ################################################################################
 
 
-def query_balance(year, quater, codes, tradedate):
+def query_balance(year, quater, codes):
     # code 代码， currency 货币资金， receivable 应收账款
     # prepays 预付账款， inventory 存货， current_asset 流动资产
     # fixed 固定资产， building 在建工程， intangible 无形资产
@@ -472,17 +472,88 @@ def query_balance(year, quater, codes, tradedate):
                     'ths_capital_reserve_pit_stock':'capital_reverve', 'ths_earned_surplus_pit_stock':'earn_reverve',\
                         'ths_undstrbtd_profit_pit_stock':'noassigned_profit', 'ths_total_equity_atoopc_pit_stock':'equity',\
                         'ths_report_changedate_pit_stock':'changedate'})
-    # 财报初始发布日期
-    df['date' ] = df['changedate'].map(lambda x: pd.to_datetime(x.split(',')[0]))
-    # 去除退市股票
-    df = df.dropna(subset=['date']).copy()
-    # 标注日期为财报日期向前推最早一个交易日
-    df['date'] = df['date'].map(lambda x: tradedate[tradedate<x][-1])
-    df = df.set_index(['date', 'code'])
+    return df
+
+def query_balance_bank(year, quater, codes):
+    # code 代码， currency 货币资金， receivable 应收账款
+    # prepays 预付账款， inventory 存货， current_asset 流动资产
+    # fixed 固定资产， building 在建工程， intangible 无形资产
+    # goodwill 商誉， deferred 长期待摊费用， asset 总资产，
+    # st_borrow 短期负债， receivable_borrow 应付账款， prepays_borrow 预收账款，
+    # payroll 应付员工工资， 1y_borrow 一年内到期非流动债务 current_borrow 流动负债， 
+    # lt_payable 长期应付款， borrow 总负债， capital_reverve 资本公积
+    # earn_reverve 盈余公积， noassigned_profit 未分配利润， equity 归母权益
+    # date 发布日期
+    #query_codes = "".join([i+',' for i in stocks.loc[look_date].index])[:-1]
+    #query_codes = "".join([i+',' for i in \
+    #    list(stocks.loc[look_date-datetime.timedelta(days=720):look_date].index.get_level_values(1).unique())])[:-1]
+    query_codes = "".join([i+',' for i in codes])[:-1]
+    # 资产负债表，不需要区分一季报、半年报、三季报、年报
+    # 现金及存放中央银行款项（货币资金）、 应收票据及应收账款
+    # 存放同业款项+拆出资金（预付款项）、 存货
+    # 流动资产合计
+    # 固定资产、 在建工程
+    # 无形资产、商誉、长期待摊费用
+    # 资产总计
+    # 短期借款、应付票据及应付账款、预收款项
+    # 应付职工薪酬、一年内到期非流动负债
+    # 流动负债合计
+    # 长期应付款、负债合计
+    # 资本公积、盈余公积、未分配利润
+    # 归属母公司所有者权益
+    # 公告日期
+    query_str = 'ths_currency_fund_pit_stock;ths_bill_and_account_receivable_pit_stock;\
+        ths_prepays_pit_stock;ths_inventory_pit_stock;\
+            ths_total_current_assets_pit_stock;\
+        ths_fixed_asset_sum_pit_stock;ths_construction_in_process_sum_pit_stock;\
+                ths_intangible_assets_pit_stock;ths_goodwill_pit_stock;ths_lt_deferred_expense_pit_stock;\
+                    ths_total_assets_pit_stock;\
+        ths_st_borrow_pit_stock;ths_bill_and_account_payable_pit_stock;ths_advance_payment_pit_stock;\
+            ths_payroll_payable_pit_stock;ths_noncurrent_liab_due_in1y_pit_stock;\
+                ths_total_current_liab_pit_stock;\
+            ths_lt_payable_sum_pit_stock;ths_total_liab_pit_stock;\
+        ths_capital_reserve_pit_stock;ths_earned_surplus_pit_stock;ths_undstrbtd_profit_pit_stock;\
+            ths_total_equity_atoopc_pit_stock;\
+                ths_report_changedate_pit_stock'.replace(' ','')
+    # 0331 一季报； 0630 二季报； 0930 三季报； 1231 年报
+    yearquater = year + quater
+    query_para = '2050-11-30,%s,1;2050-11-30,%s,1;\
+        2050-11-30,%s,1;2050-11-30,%s,1;\
+            2050-11-30,%s,1;\
+                2050-11-30,%s,1;2050-11-30,%s,1;\
+                    2050-11-30,%s,1;2050-11-30,%s,1;2050-11-30,%s,1;\
+                        2050-11-30,%s,1;\
+            2050-11-30,%s,1;2050-11-30,%s,1;2050-11-30,%s,1;\
+                2050-11-30,%s,1;2050-11-30,%s,1;\
+                    2050-11-30,%s,1;\
+            2050-11-30,%s,1;2050-11-30,%s,1;\
+                2050-11-30,%s,1;2050-11-30,%s,1;2050-11-30,%s,1;\
+                    2050-11-30,%s,1;\
+                    2000-11-28,2050-11-19,604,1,%s'%(yearquater, yearquater, yearquater, yearquater, yearquater, \
+                                                    yearquater, yearquater, yearquater, yearquater, yearquater,\
+                                                    yearquater, yearquater, yearquater, yearquater, yearquater,\
+                                                    yearquater, yearquater, yearquater, yearquater, yearquater,\
+                                                    yearquater, yearquater, yearquater, yearquater)
+    query_para = query_para.replace(' ','')
+    global temp
+    temp = THS_BD(query_codes,query_str,query_para)
+    df = temp.data.rename(columns={'thscode':'code', 'ths_currency_fund_pit_stock':'currency',\
+        'ths_bill_and_account_receivable_pit_stock':'receivable', 'ths_prepays_pit_stock':'prepays',\
+        'ths_inventory_pit_stock':'inventory', 'ths_total_current_assets_pit_stock':'current_asset',\
+        'ths_fixed_asset_sum_pit_stock':'fixed', 'ths_construction_in_process_sum_pit_stock':'building',\
+            'ths_intangible_assets_pit_stock':'intangible', 'ths_goodwill_pit_stock':'goodwill',\
+                'ths_lt_deferred_expense_pit_stock':'deferred', 'ths_total_assets_pit_stock':'asset',\
+                        'ths_st_borrow_pit_stock':'st_borrow', 'ths_bill_and_account_payable_pit_stock':'receivable_borrow',\
+            'ths_advance_payment_pit_stock':'prepays_borrow',  'ths_noncurrent_liab_due_in1y_pit_stock':'1y_borrow', 'ths_total_current_liab_pit_stock':'current_borrow',\
+            'ths_payroll_payable_pit_stock':'payroll', 'ths_lt_payable_sum_pit_stock':'lt_payable', 'ths_total_liab_pit_stock':'borrow',\
+                    'ths_capital_reserve_pit_stock':'capital_reverve', 'ths_earned_surplus_pit_stock':'earn_reverve',\
+                        'ths_undstrbtd_profit_pit_stock':'noassigned_profit', 'ths_total_equity_atoopc_pit_stock':'equity',\
+                        'ths_report_changedate_pit_stock':'changedate'})
     return df
 
 
-def query_income(year, quater, codes, tradedate):
+
+def query_income(year, quater, codes):
     #query_codes = "".join([i+',' for i in \
     #    list(stocks.loc[look_date-datetime.timedelta(days=365):look_date].index.get_level_values(1).unique())])[:-1]
     query_codes = "".join([i+',' for i in codes])[:-1]
@@ -505,21 +576,21 @@ def query_income(year, quater, codes, tradedate):
     query_para = query_para.replace(' ','')
     global temp
     temp = THS_BD(query_codes,query_str,query_para)
-    df = temp.data.rename(columns={'thscode':'code', 'ths_revenue_pit_stock':'revenue%s'%quater, 'ths_manage_fee_pit_stock':'manage_fee%s'%quater,\
-        'ths_operating_cost_pit_stock':'operating_cost%s'%quater, 'ths_sales_fee_pit_stock':'sales_fee%s'%quater,\
-        'ths_financing_expenses_pit_stock':'financing_fee%s'%quater, 'ths_op_pit_stock':'operating_profit%s'%quater, \
-            'ths_np_atoopc_pit_stock':'profit%s'%quater, 'ths_report_changedate_pit_stock':'changedate%s'%quater})
-    # 财报初始发布日期
-    df['date' ] = df['changedate%s'%quater].map(lambda x: pd.to_datetime(x.split(',')[0]))
-    # 去除退市股票
-    df = df.dropna(subset=['date']).copy()
-    # 标注日期为财报日期向前推最早一个交易日
-    df['date'] = df['date'].map(lambda x: tradedate[tradedate<x][-1])
-    df = df.set_index(['date', 'code'])
+    df = temp.data.rename(columns={'thscode':'code', 'ths_revenue_pit_stock':'revenue', 'ths_manage_fee_pit_stock':'manage_fee',\
+        'ths_operating_cost_pit_stock':'operating_cost', 'ths_sales_fee_pit_stock':'sales_fee',\
+        'ths_financing_expenses_pit_stock':'financing_fee', 'ths_op_pit_stock':'operating_profit', \
+            'ths_np_atoopc_pit_stock':'profit', 'ths_report_changedate_pit_stock':'changedate'})
+    ## 财报初始发布日期
+    #df['date' ] = df['changedate%s'].map(lambda x: pd.to_datetime(x.split(',')[0]))
+    ## 去除退市股票
+    #df = df.dropna(subset=['date']).copy()
+    ## 标注日期为财报日期向前推最早一个交易日
+    #df['date'] = df['date'].map(lambda x: tradedate[tradedate<x][-1])
+    #df = df.set_index(['date', 'code'])
     return df
 
 
-def query_cashflow(year, quater, codes, tradedate):
+def query_cashflow(year, quater, codes):
     #基础数据-股票-经营活动现金流入小计;经营活动现金流出小计;投资活动现金流入小计;投资活动现金流出小计;筹资活动现金流入小计;分配股利、利润或偿付利息支付的现金等-iFinD数据接口
     query_codes = "".join([i+',' for i in codes])[:-1]
     # 经营现金流入、流出
@@ -542,21 +613,21 @@ def query_cashflow(year, quater, codes, tradedate):
     query_para = query_para.replace(' ','')
     global temp
     temp = THS_BD(query_codes,query_str,query_para)
-    df = temp.data.rename(columns={'thscode':'code', 'ths_sub_total_of_ci_from_oa_pit_stock':'OAcashin%s'%quater,\
-             'ths_sub_total_of_cos_from_oa_pit_stock':'OAcashout%s'%quater,\
-        'ths_sub_total_of_ci_from_ia_pit_stock':'IAcashin%s'%quater, \
-            'ths_sub_total_of_cos_from_ia_pit_stock':'IAcashout%s'%quater,\
-        'ths_sub_total_of_ci_from_fa_pit_stock':'FAcashin%s'%quater,\
-             'ths_sub_total_of_cos_from_fa_pit_stock':'FAcashout%s'%quater, \
-            'ths_cash_paid_of_distribution_pit_stock':'distribution%s'%quater,\
-                  'ths_report_changedate_pit_stock':'changedate%s'%quater})
-    # 财报初始发布日期
-    df['date' ] = df['changedate%s'%quater].map(lambda x: pd.to_datetime(x.split(',')[0]))
-    # 去除退市股票
-    df = df.dropna(subset=['date']).copy()
-    # 标注日期为财报日期向前推最早一个交易日
-    df['date'] = df['date'].map(lambda x: tradedate[tradedate<x][-1])
-    df = df.set_index(['date', 'code'])
+    df = temp.data.rename(columns={'thscode':'code', 'ths_sub_total_of_ci_from_oa_pit_stock':'OAcashin',\
+             'ths_sub_total_of_cos_from_oa_pit_stock':'OAcashout',\
+        'ths_sub_total_of_ci_from_ia_pit_stock':'IAcashin', \
+            'ths_sub_total_of_cos_from_ia_pit_stock':'IAcashout',\
+        'ths_sub_total_of_ci_from_fa_pit_stock':'FAcashin',\
+             'ths_sub_total_of_cos_from_fa_pit_stock':'FAcashout', \
+            'ths_cash_paid_of_distribution_pit_stock':'distribution',\
+                  'ths_report_changedate_pit_stock':'changedate'})
+    ## 财报初始发布日期
+    #df['date' ] = df['changedate%s'].map(lambda x: pd.to_datetime(x.split(',')[0]))
+    ## 去除退市股票
+    #df = df.dropna(subset=['date']).copy()
+    ## 标注日期为财报日期向前推最早一个交易日
+    #df['date'] = df['date'].map(lambda x: tradedate[tradedate<x][-1])
+    #df = df.set_index(['date', 'code'])
     return df
 
 
