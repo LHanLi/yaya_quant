@@ -32,15 +32,15 @@ def query_CBlist(today, all=True):
         codes0 = codes0[codes0.apply(lambda x: ('SH' in x)|('SZ' in x))]
     else:
         codes0 = ()
-# 数据查询时的全部可交换债
-    query = today + ';031026_640021001'
-    temp = THS_DP('block',query,'thscode:Y,security_name:Y')
-    if type(temp.data) != type(None):
-        codes01 = temp.data['THSCODE']
-    # 只取沪深转债
-        codes01 = codes01[codes01.apply(lambda x: ('SH' in x)|('SZ' in x))]
-    else:
-        codes01 = ()
+## 数据查询时的全部可交换债
+#    query = today + ';031026_640021001'
+#    temp = THS_DP('block',query,'thscode:Y,security_name:Y')
+#    if type(temp.data) != type(None):
+#        codes01 = temp.data['THSCODE']
+#    # 只取沪深转债
+#        codes01 = codes01[codes01.apply(lambda x: ('SH' in x)|('SZ' in x))]
+#    else:
+#        codes01 = ()
 # 退市转债
     query = today + ';031014002004'
     temp = THS_DP('block',query,'thscode:Y,security_name:Y')
@@ -49,16 +49,17 @@ def query_CBlist(today, all=True):
         codes1 = codes1[codes1.apply(lambda x: ('SH' in x)|('SZ' in x))]
     else:
         codes1 = ()
-# 退市可交换债
-    query = today + ';031014002015'
-    temp = THS_DP('block',query,'thscode:Y,security_name:Y')
-    if type(temp.data) != type(None):
-        codes11 = temp.data['THSCODE']
-        codes11 = codes11[codes11.apply(lambda x: ('SH' in x)|('SZ' in x))]
-    else:
-        codes11 = ()
+## 退市可交换债
+#    query = today + ';031014002015'
+#    temp = THS_DP('block',query,'thscode:Y,security_name:Y')
+#    if type(temp.data) != type(None):
+#        codes11 = temp.data['THSCODE']
+#        codes11 = codes11[codes11.apply(lambda x: ('SH' in x)|('SZ' in x))]
+#    else:
+#        codes11 = ()
     # 包含全部 today 时可交易转债（还包含today时已退市转债）
-    codes = list(set(codes0) | set(codes01) | set(codes1) | set(codes11))
+    #codes = list(set(codes0) | set(codes01) | set(codes1) | set(codes11))
+    codes = list(set(codes0) | set(codes1))
     if all:
         return codes
     # 当日可交易
