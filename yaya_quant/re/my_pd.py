@@ -148,81 +148,6 @@ def parallel_group(df, func, n_core=12, sort_by='code'):
 # 行情数据的常用计算
 # 数据格式为 mutiindex (date,code)   close...
 
-## 计算时间序列数据
-## 数据df，函数名(Max, Min, Skew, Kurt, MA, Std)
-## 求相关系数时cal命名方式为"cal1,cal2"
-## 作用字段，滚动时间窗口长度，新增数据列名，是否并行，并行核数
-## rolling输入series而不是df速度会明显提升
-#def cal_TS(df, func_name='Max', cal='close', period=20, colname=None, parallel=False, n_core=12):
-#    df = copy.deepcopy(df)
-## inde必须为 'code'和'date'，并且code内部的date排序
-#    df = df.reset_index().sort_values(by='code').set_index(['code', 'date']).sort_index(level=['code', 'date'])
-#    if colname==None:
-#        new_col = cal + '_' + func_name + '_' + str(period)
-#    else:
-#        new_col = colname
-#    if parallel:
-#        # 这里的函数返回df
-#        def func(df):
-#            if func_name=='Max':
-#                return df[cal].rolling(period, min_periods=1).max()
-#            elif func_name=='Min':
-#                return df[cal].rolling(period, min_periods=1).min()
-#            elif func_name=='Skew':
-#                return df[cal].rolling(period, min_periods=1).skew()
-#            elif func_name=='Kurt':
-#                return df[cal].rolling(period, min_periods=1).kurt()
-#            elif func_name=='MA':
-#                return df[cal].rolling(period, min_periods=1).mean()
-#            elif func_name=='Std':
-#                return df[cal].rolling(period, min_periods=1).std()
-#            elif func_name=='Sum':
-#                return df[cal].rolling(period, min_periods=1).sum()
-#            elif func_name=='Zscore':
-#                return (df[cal]-df[cal].rolling(period, min_periods=1).mean())/df[cal].rolling(period, min_periods=1).std().replace(0, np.nan)
-#            elif func_name=='HV':
-#                returns = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
-#                return np.exp(returns.rolling(period, min_periods=1).std() * np.sqrt(252))-1
-#            elif func_name=='argmax':
-#                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).apply(np.argmax)+1
-#            elif func_name=='argmin':
-#                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).apply(np.argmin)+1
-#            elif func_name=='rank':
-#                return df[cal].groupby('code', sort=False).rolling(period, min_periods=1).rank()
-#        df[new_col] =  parallel_group(df, func, n_core=n_core).values
-#    else:
-#        # 这里=后的函数返回.values
-#        if func_name=='Max':
-#            df[new_col] =  df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).max().values
-#        elif func_name=='Min':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].min().values
-#        elif func_name=='Skew':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].skew().values
-#        elif func_name=='Kurt':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].kurt().values
-#        elif func_name=='MA':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].mean().values
-#        elif func_name=='Std':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].std().values
-#        elif func_name=='Sum':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].sum().values
-#        elif func_name=='Zscore':
-#            df[new_col] =  (df[cal].values - df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).mean().values)\
-#                             /df.groupby('code', sort=False)[cal].rolling(period, min_periods=1).std().replace(0, np.nan).values
-#            df[new_col] = df[new_col].fillna(0)
-#        elif func_name=='HV':
-#            df['returns'] = (df[cal]/(df[cal].shift())).apply(lambda x: np.log(x))
-#            df[new_col] =  np.exp(df.groupby('code', sort=False)['returns'].rolling(period, min_periods=1).std().values * np.sqrt(252))-1
-#        elif func_name=='argmax':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].apply(np.argmax).values+1
-#        elif func_name=='argmin':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].apply(np.argmin).values+1
-#        elif func_name=='rank':
-#            df[new_col] =  df.groupby('code', sort=False).rolling(period, min_periods=1)[cal].rank().values
-## 将index变回 date code
-#    df = df.reset_index().sort_values(by='date').set_index(['date', 'code'])
-#    return df
-
 # 输入series返回series
 # 有并行选项的函数默认并行
 # a 函数可选参数
@@ -378,19 +303,6 @@ def cal_corr(df, x_name, y_name, n, parallel=True, n_core=12):
     df = df.sort_index(level=['date','code']) 
     return df
 
-#def cal_CrossReg(df_, x_name, y_name, series=False):
-#    df = copy.copy(df_)
-#    name = str(y_name) + '-' + str(x_name) + '--alpha'
-#    beta = df.groupby('date').apply(lambda x: ((x[y_name]-x[y_name].mean())*(x[x_name]-x[x_name].mean())).sum()/((x[x_name]-x[x_name].mean())**2).sum())
-#    gamma = df.groupby('date').apply(lambda x: x[y_name].mean() - beta[x.index[0][0]]*x[x_name].mean())
-#    r = df.groupby('date').apply(lambda x: np.sqrt(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum()/(((gamma[x.index[0][0]]+x[x_name]*beta[x.index[0][0]] - x[y_name].mean())**2).sum() + ((x[y_name]-(gamma[x.index[0][0]] + x[x_name]*beta[x.index[0][0]]))**2).sum()))) 
-#
-#    df[name] = df.groupby('date').apply(lambda x: x[y_name] - beta[x.index[0][0]]*x[x_name] - gamma[x.index[0][0]]).values
-#
-#    if series:
-#        return df, beta, gamma, r
-#    else:
-#        return df
 
 # x_name list, y_nmae column
 # 截面多元线性回归
